@@ -1,0 +1,3 @@
+[lint.per-file-ignores]
+# conftest.py debe preparar sys.path y variables de entorno antes de importar la app.
+"tests/*" = ["E402"]

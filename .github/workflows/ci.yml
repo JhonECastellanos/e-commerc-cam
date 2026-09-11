@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, main, V2]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check app tests
+      - run: python -m compileall app
+      - name: Tests (pytest)
+        run: python -m pytest -q
+      - run: pip-audit -r requirements.txt
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - name: Tests (vitest)
+        run: npm test
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  container:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t instalacam-backend:ci ./backend
+      - run: docker build -t instalacam-frontend:ci ./frontend
+
+  deploy:
+    # CD alternativo para Render. Con el stack principal (Vercel + Supabase) el
+    # despliegue lo hace la integración Git de Vercel automáticamente en cada
+    # push (Preview en ramas/PRs, Producción en master).
+    # Este job solo aplica si usas Render: requiere los secretos
+    # RENDER_DEPLOY_HOOK_BACKEND / RENDER_DEPLOY_HOOK_FRONTEND y CD_ENABLED=true.
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: [container]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Desplegar backend en Render
+        if: ${{ vars.CD_ENABLED == 'true' }}
+        run: curl -fsS "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}"
+      - name: Desplegar frontend en Render
+        if: ${{ vars.CD_ENABLED == 'true' }}
+        run: curl -fsS "${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}"
+      - name: CD deshabilitado
+        if: ${{ vars.CD_ENABLED != 'true' }}
+        run: echo "Define la variable de repositorio CD_ENABLED=true y los deploy hooks para activar el despliegue automático."
