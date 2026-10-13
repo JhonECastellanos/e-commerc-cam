@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import CatalogImage, { imagePath } from '../../components/public/CatalogImage';
 
 const MODE_IMAGES: Record<string, string[]> = {
   cableado: ['combo-hero', 'camara-detalle', 'dvr-detalle'],
@@ -72,9 +73,9 @@ export default function ComboDetail() {
     const folder = getBrandFolder(combo.brand_name);
     const mode = combo.mode;
     const suffixes = MODE_IMAGES[mode] || MODE_IMAGES.cableado;
-    return suffixes.map(
+    return [...new Set([imagePath(combo.image_url), ...suffixes.map(
       (s) => `/images/brands/${folder}/${mode}/${folder}-${mode}-${s}.svg`
-    );
+    )].filter((value): value is string => Boolean(value)))];
   };
 
   const openLightbox = (index: number) => {
@@ -124,7 +125,7 @@ export default function ComboDetail() {
             className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden cursor-pointer group h-80 md:h-96"
             onClick={() => openLightbox(0)}
           >
-            <img
+            <CatalogImage
               src={galleryImages[0]}
               alt={`${combo.brand_name} - ${modeLabels[combo.mode]}`}
               className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
@@ -143,7 +144,7 @@ export default function ComboDetail() {
                   className="bg-gray-100 rounded-lg overflow-hidden cursor-pointer h-24 hover:ring-2 hover:ring-primary-400 transition-all"
                   onClick={() => openLightbox(idx + 1)}
                 >
-                  <img
+                  <CatalogImage
                     src={img}
                     alt={`${combo.brand_name} vista ${idx + 2}`}
                     className="w-full h-full object-contain p-2"
@@ -326,7 +327,7 @@ export default function ComboDetail() {
               </button>
             </>
           )}
-          <img
+          <CatalogImage
             src={galleryImages[lightboxIndex]}
             alt={`Vista ampliada ${lightboxIndex + 1}`}
             className="max-w-[90vw] max-h-[90vh] object-contain p-4"

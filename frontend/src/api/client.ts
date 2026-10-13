@@ -50,6 +50,12 @@ async function uploadForm<T>(url: string, formData: FormData): Promise<T> {
 }
 
 export const api = {
+  getAdvisoryPrivacy: () => request<any>('/advisory/privacy'),
+  advisoryProfile: (data: unknown) => request<any>('/advisory/profile', { method: 'POST', body: JSON.stringify(data) }),
+  submitAdvisory: (data: unknown, key: string) => request<any>('/advisory/requests', { method: 'POST', body: JSON.stringify(data), headers: { 'Idempotency-Key': key } }),
+  adminGetAdvisories: (page = 1) => request<any[]>(`/admin/advisory/requests?page=${page}`),
+  adminReviewAdvisory: (id: number, data: unknown) => request<any>(`/admin/advisory/requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  interpretSimulation: (data: unknown) => request<{ provider: string; reply: string; action: { ids: string[]; on: boolean } | null }>('/simulation/interpret', { method: 'POST', body: JSON.stringify(data) }),
   getBrands: () => request<any[]>('/brands'),
   getCombos: (params?: Record<string, string>) => {
     const qs = params ? '?' + new URLSearchParams(params).toString() : '';

@@ -134,6 +134,7 @@ SPECS_BY_RESOLUTION = {
 }
 
 SETTINGS_DEFAULT = {
+    "advisory_retention_days": ("[DEFINIR]", "Plazo de conservación de solicitudes de asesoría; confirmar con la política del responsable"),
     "install_fee_per_camera": ("75000", "Valor en COP por cámara instalada (mano de obra) — cableado, híbrido, solar"),
     "install_fee_per_camera_wireless": ("50000", "Valor en COP por cámara inalámbrica instalada (mano de obra)"),
     "vat_rate": ("19", "Porcentaje de IVA aplicable"),

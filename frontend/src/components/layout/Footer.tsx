@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import { configuredPublicLink } from '../../api/contact';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -40,7 +41,9 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link to="/" className="hover:text-white transition-colors">{t('nav.home')}</Link></li>
               <li><Link to="/catalogo" className="hover:text-white transition-colors">{t('nav.catalog')}</Link></li>
-              <li><Link to="/faq" className="hover:text-white transition-colors">{t('nav.faq')}</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">{t('nav.faq', { defaultValue: 'Preguntas frecuentes' })}</Link></li>
+              <li><Link to="/asesoria" className="hover:text-white transition-colors">Asesoría personalizada</Link></li>
+              <li><Link to="/privacidad" className="hover:text-white transition-colors">Tratamiento de datos</Link></li>
               <li><Link to="/condiciones" className="hover:text-white transition-colors">{t('nav.terms')}</Link></li>
             </ul>
           </div>
@@ -48,7 +51,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Redes sociales</h3>
             <div className="space-y-2">
-              {socialLinks.map((link) => (
+              {socialLinks.filter(link => configuredPublicLink(link.url)).map((link) => (
                 <a
                   key={link.id}
                   href={link.url}

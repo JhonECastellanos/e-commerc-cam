@@ -7,6 +7,8 @@ import ContratarWizard from '../../components/public/ContratarWizard';
 import HeroCarousel from '../../components/public/HeroCarousel';
 import ProductCarousel from '../../components/public/ProductCarousel';
 import BrandCarousel from '../../components/public/BrandCarousel';
+import SmartServices from '../../components/public/SmartServices';
+import AdvisoryWizard from '../../components/public/AdvisoryWizard';
 
 function FadeInSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -83,6 +85,8 @@ export default function Home() {
       <FadeInSection delay={0.1}>
         <ContratarWizard />
       </FadeInSection>
+      <SmartServices />
+      <section className="max-w-4xl mx-auto px-4 py-14"><AdvisoryWizard /></section>
 
       <section className="py-16 bg-gray-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -140,8 +144,8 @@ export default function Home() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeInSection>
-            <div className="grid md:grid-cols-5 gap-8">
-              <div className="md:col-span-3 flex flex-col min-h-[350px]">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+              <div className="min-w-0 md:col-span-3 flex flex-col min-h-[350px]">
                 {products.length > 0 && (
                   <div className="flex-1">
                     <h2 className="text-xl font-bold text-gray-900 mb-6">Nuestros productos <span className="text-gray-400 font-normal text-base">({products.length})</span></h2>
@@ -156,7 +160,7 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              <div className="md:col-span-2">
+              <div className="min-w-0 md:col-span-2">
                 {brands.length > 0 && (
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-6 md:text-center lg:text-right">Trabajamos con las mejores marcas</h2>
@@ -192,14 +196,12 @@ export default function Home() {
           </StaggerChildren>
           <FadeInSection delay={0.2}>
             <div className="text-center mt-8">
-              <a
-                href={`https://wa.me/${settings.whatsapp_number || '[COMPLETAR]'}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/asesoria"
                 className="text-primary-500 hover:text-primary-600 font-medium"
               >
                 {t('home.faq_more')}
-              </a>
+              </Link>
             </div>
           </FadeInSection>
         </div>

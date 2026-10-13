@@ -13,6 +13,7 @@ from app.models.order import Order
 from app.models.setting import Setting
 from app.models.banner import Banner
 from app.models.product import Product
+from app.services.catalog_media import catalog_image
 from app.schemas import BrandOut, ComboPublic, CoverageAreaOut, SocialLinkOut, CustomComboSelection, CustomPriceIn, CustomPriceOut, BannerOut, ProductOut
 
 router = APIRouter()
@@ -75,7 +76,7 @@ async def get_combos(
             is_budget=c.is_budget,
             level=c.level,
             warranty_text=c.warranty_text,
-            image_url=c.image_url,
+            image_url=catalog_image(c),
             specs=c.specs,
             storage_options=c.storage_options,
             install_complexity=c.install_complexity,
@@ -107,7 +108,7 @@ async def get_combo(combo_id: int, db: AsyncSession = Depends(get_db)):
         is_budget=c.is_budget,
         level=c.level,
         warranty_text=c.warranty_text,
-        image_url=c.image_url,
+        image_url=catalog_image(c),
         specs=c.specs,
         storage_options=c.storage_options,
         install_complexity=c.install_complexity,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import CatalogImage from '../../components/public/CatalogImage';
 
 const LEVEL_ORDER = ['economico', 'intermedio', 'premium'];
 const LEVEL_LABELS: Record<string, string> = {
@@ -71,7 +72,7 @@ export default function Catalog() {
               </div>
 
               <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
-                <span className="text-5xl">{LEVEL_ICONS[combo.level]}</span>
+                <CatalogImage src={combo.image_url} alt={combo.name || `${combo.brand_name}: ${combo.cameras_count} cámaras`} className="w-full h-full object-contain p-3" />
               </div>
 
               <div className="text-center mb-3">

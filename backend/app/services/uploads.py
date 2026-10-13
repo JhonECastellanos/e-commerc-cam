@@ -30,11 +30,11 @@ async def _validate_image(file: UploadFile) -> tuple[bytes, str]:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Solo se permiten imágenes JPG, PNG o WebP")
     data = await file.read(settings.max_upload_bytes + 1)
     if not data or len(data) > settings.max_upload_bytes:
-        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail="La imagen supera el tamaño permitido")
+        raise HTTPException(status_code=413, detail="La imagen supera el tamaño permitido")
     if not any(data.startswith(signature) for signature in MAGIC_BYTES[content_type]):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El contenido del archivo no coincide con una imagen válida")
+        raise HTTPException(status_code=422, detail="El contenido del archivo no coincide con una imagen válida")
     if content_type == "image/webp" and data[8:12] != b"WEBP":
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El contenido WebP no es válido")
+        raise HTTPException(status_code=422, detail="El contenido WebP no es válido")
     return data, ALLOWED_IMAGE_TYPES[content_type][0]
 
 

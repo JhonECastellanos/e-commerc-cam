@@ -118,7 +118,7 @@ for sub in ["catalog", "agreements", "banners", "productos", "combos", "equipo",
         break
 class PublicUploadsStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
-        if path == "agreements" or path.startswith("agreements/"):
+        if path.lower() == "agreements" or path.lower().startswith("agreements/"):
             raise HTTPException(status_code=404, detail="Archivo no encontrado")
         return await super().get_response(path, scope)
 
@@ -154,3 +154,6 @@ app.include_router(admin_products.router, prefix="/api/admin", tags=["Admin Prod
 app.include_router(admin_combos.router, prefix="/api/admin", tags=["Admin Combos"])
 app.include_router(whatsapp.router, prefix="/api", tags=["WhatsApp"])
 app.include_router(ws.router, prefix="/api", tags=["Tiempo real"])
+from app.routers import advisory, simulation  # noqa: E402
+app.include_router(advisory.router, prefix="/api", tags=["Asesoría"])
+app.include_router(simulation.router, prefix="/api", tags=["Simulación virtual"])

@@ -1,0 +1,4 @@
+{
+  "folders": [{ "name": "Plataforma integrada", "path": "." }, { "name": "Smarthome (referencia)", "path": "../Smarthome" }],
+  "settings": { "files.exclude": { "**/node_modules": true, "**/.venv": true, "**/dist": true, "**/test-results": true }, "python.defaultInterpreterPath": "${workspaceFolder:Plataforma integrada}/.venv/Scripts/python.exe" }
+}

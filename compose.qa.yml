@@ -1,0 +1,17 @@
+# Separate empty test database. Never mounts the original project's volumes.
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-instalacam}
+      POSTGRES_DB: ${POSTGRES_DB:-instalacam}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Ejecuta scripts/setup-local.py}
+    ports: ["127.0.0.1:5544:5432"]
+    volumes: [qa_pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  qa_pgdata:

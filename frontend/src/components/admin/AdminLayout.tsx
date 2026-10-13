@@ -24,6 +24,7 @@ export default function AdminLayout() {
     { to: '/admin/multimedia', label: 'Multimedia', icon: '🖼️' },
     { to: '/admin/precios', label: t('admin.prices'), icon: '💰' },
     { to: '/admin/ordenes', label: t('admin.orders'), icon: '📋' },
+    { to: '/admin/asesorias', label: 'Solicitudes de asesoría', icon: '🏠' },
     { to: '/admin/notificaciones', label: t('admin.notifications'), icon: '🔔' },
     { to: '/admin/redes', label: t('admin.social'), icon: '🔗' },
     { to: '/admin/cobertura', label: t('admin.coverage'), icon: '📍' },
