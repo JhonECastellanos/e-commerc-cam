@@ -13,6 +13,14 @@ El remoto del e-commerce contenía administración de productos/banners, validac
 - Las credenciales de la cuenta local se generan en `.env`; no se muestran en consola ni deben enviarse al chat.
 - `detener.cmd` detiene solo esta instancia y conserva sus volúmenes. No usar borrado de volúmenes para actualizar.
 
+## Organización de contenedores
+
+El grupo principal en Docker Desktop es `e-commerc-cam`: contiene únicamente `frontend`, `backend` y `db`. El archivo Compose declara ese nombre y los iniciadores lo fijan expresamente, para no crear grupos adicionales al ejecutar desde otra carpeta. La excepción de pruebas es `instalacam-integracion-qa`, declarada en `compose.qa.yml` y detenida después de validar.
+
+La reorganización conserva los mismos volúmenes de la plataforma integrada, referenciados por nombre en `.env` como externos. No copia la base antigua ni elimina volúmenes. Los volúmenes históricos `e-commerc-cam_pgdata` y `e-commerc-cam_uploads_data` permanecen intactos y separados de los datos usados por la plataforma actual. Una instalación nueva usa los nombres `e-commerc-cam_plataforma_*` y crea sus propios volúmenes. Para operar la versión integrada usar los iniciadores de esta carpeta, no el Compose del checkout histórico V1.
+
+Las imágenes antiguas se conservaron con etiquetas `historico-*`. La configuración de los contenedores antiguos se respaldó en `assets-recovery/container-organization/legacy-containers.dpapi`, excluida de Git y cifrada con DPAPI para este usuario de Windows. Los contenedores antiguos solo presentaban cambios de caché/arranque; los archivos de sus aplicaciones y datos siguen preservados en imágenes, repositorio y volúmenes.
+
 ## Integración implementada
 
 Se conservan React 18, Vite, FastAPI, SQLAlchemy y PostgreSQL. Se actualizaron dependencias vulnerables (React Router, Tailwind, FastAPI, multipart y JWT) manteniendo rutas, colores y estructura. Three.js MIT construye geometría propia; no se descargaron modelos o fotografías nuevos. Se descartó levantar Express/Prisma/React 19 como segunda plataforma.

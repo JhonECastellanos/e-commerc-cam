@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--project', choices=['instalacam-integracion-local', 'instalacam-integracion-qa'], required=True)
+parser.add_argument('--project', choices=['e-commerc-cam'], required=True)
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 records = [json.loads(file.read_text(encoding='utf-8')) for file in (root / 'frontend' / 'test-results').rglob('image-restore.json')]
@@ -30,7 +30,5 @@ async def restore():
     await engine.dispose()
 asyncio.run(restore())
 """
-if args.project != 'instalacam-integracion-local':
-    raise SystemExit('Este helper usa exclusivamente el backend local integrado; la QA nativa se conserva separada.')
 result = subprocess.run(['docker.exe', 'compose', '-p', args.project, 'exec', '-T', 'backend', 'python', '-c', code], cwd=root, input=json.dumps(records), text=True, check=False)
 raise SystemExit(result.returncode)

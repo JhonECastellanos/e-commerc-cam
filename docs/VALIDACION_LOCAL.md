@@ -29,3 +29,9 @@ Vitest se ejecutó de nuevo sin construir Docker simultáneamente: una ejecució
 - Antes de publicar faltan dominio/TLS, credenciales reales, políticas/datos del negocio, revisión de las tarifas sugeridas y validación de una migración autorizada. Los sistemas físicos y el aislamiento de un rack compartido requieren dimensionamiento y piloto; el simulador no controla hardware.
 
 Comandos reproducibles y continuidad: [INTEGRACION_SMARTHOME.md](INTEGRACION_SMARTHOME.md). Criterio comercial y fuentes: [PROPUESTA_COMERCIAL.md](PROPUESTA_COMERCIAL.md).
+
+## Reorganización de contenedores — 13 de octubre de 2026
+
+El grupo principal es ahora `e-commerc-cam`, con tres servicios en ejecución: frontend, backend y db. Se retiraron los tres contenedores duplicados de `instalacam-integracion-local` y se recrearon los servicios del grupo original con las imágenes de la plataforma integrada. Los volúmenes actuales se reutilizaron directamente como externos; los volúmenes históricos permanecen intactos. El grupo de pruebas `instalacam-integracion-qa` sigue detenido.
+
+Los conteos antes y después coinciden: 7 productos, 490 combos, 0 pedidos, 6 asesorías y 1 usuario. La API está lista y se verificaron el inicio de sesión y las consultas privadas de administración sin editar registros. Las 8 pruebas del carrusel, ambos modelos y el catálogo completo en escritorio/móvil pasan sobre la agrupación nueva. No cambiaron el código funcional, las credenciales ni la URL `http://localhost:8094`.

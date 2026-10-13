@@ -8,7 +8,7 @@ if errorlevel 1 (
   echo Inicia Docker Desktop y vuelve a ejecutar este archivo.
   exit /b 1
 )
-docker.exe compose -p instalacam-integracion-local up --build -d
+docker.exe compose -p e-commerc-cam up --build -d
 if errorlevel 1 exit /b 1
 echo.
 echo Plataforma local: http://localhost:8094

@@ -1,3 +1,5 @@
+name: e-commerc-cam
+
 services:
   db:
     image: postgres:15-alpine
@@ -16,6 +18,7 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   backend:
+    image: e-commerc-cam-backend
     build: ./backend
     env_file: .env
     environment:
@@ -37,6 +40,7 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   frontend:
+    image: e-commerc-cam-frontend
     build: ./frontend
     ports:
       - "${HTTP_BIND_IP:-127.0.0.1}:${HTTP_PORT:-80}:8080"
@@ -50,5 +54,11 @@ services:
 
 volumes:
   pgdata:
+    name: ${PLATFORM_PG_VOLUME:-e-commerc-cam_plataforma_pgdata}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}
   uploads_data:
+    name: ${PLATFORM_UPLOADS_VOLUME:-e-commerc-cam_plataforma_uploads}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}
   private_agreements:
+    name: ${PLATFORM_AGREEMENTS_VOLUME:-e-commerc-cam_plataforma_agreements}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}

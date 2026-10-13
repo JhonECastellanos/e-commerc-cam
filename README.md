@@ -38,6 +38,8 @@ La rama de integración agrega dos laboratorios 3D reales (casa y apartamento), 
 
 El iniciador conserva `.env` si existe; si no, genera credenciales aleatorias locales. `detener.cmd` detiene únicamente la instancia integrada y conserva sus datos. Los puertos se pueden ajustar en `.env`.
 
+Todos los servicios normales (`frontend`, `backend`, `db`) pertenecen al grupo Docker Compose **`e-commerc-cam`**. La configuración de pruebas usa exclusivamente `compose.qa.yml` y el grupo `instalacam-integracion-qa`. La [organización de contenedores y volúmenes](docs/INTEGRACION_SMARTHOME.md#organización-de-contenedores) documenta cómo se conservan los datos actuales e históricos.
+
 ### Frontend solo (hot reload)
 
 ```powershell

@@ -1,4 +1,5 @@
 # Separate empty test database. Never mounts the original project's volumes.
+name: instalacam-integracion-qa
 services:
   db:
     image: postgres:15-alpine
