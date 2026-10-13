@@ -6,7 +6,7 @@ El remoto del e-commerce contenía administración de productos/banners, validac
 
 ## Abrir y ejecutar
 
-- Abrir `instalacam-integracion.code-workspace` en VS Code.
+- Abrir `e-commerc-cam.code-workspace` en VS Code. La carpeta operativa es `D:\Proyectos\Pagina_instalacion_camaras\e-commerc-cam`; el código aprovechado de Smarthome forma parte de esta aplicación y no necesita otro frontend, backend o contenedor.
 - Iniciar Docker Desktop y ejecutar `iniciar.cmd`.
 - Sitio: http://localhost:8094. Casa: `/simulador/casa`. Apartamento: `/simulador/apartamento`.
 - Asesoría: `/asesoria`. Servicios y estimador: `/servicios`. Solicitudes: `/admin/asesorias`.

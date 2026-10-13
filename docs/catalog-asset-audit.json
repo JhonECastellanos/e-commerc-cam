@@ -1,5 +1,10 @@
 {
-  "files": 154,
+  "files": 286,
+  "original_svg_resources": 154,
+  "original_catalog_photos": 132,
+  "optimized_photo_bytes": 9527074,
+  "originals_folder": "../CATALOGO",
+  "photo_manifest": "../frontend/src/data/catalog-photos.json",
   "invalid_before": [
     "brands\\dahua\\cableado\\dahua-cableado-combo-hero.svg",
     "brands\\dahua\\dahua-combo-hero.svg",

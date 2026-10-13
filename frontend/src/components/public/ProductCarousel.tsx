@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import CatalogImage from './CatalogImage';
+import { productPhoto } from '../../utils/catalogPhotos';
 
 interface ProductCarouselProps {
   products: any[];
@@ -36,9 +37,9 @@ export default function ProductCarousel({ products }: ProductCarouselProps) {
           {products.map((product) => (
             <div key={product.id} className="flex-[0_0_50%] min-w-0 sm:flex-[0_0_33%] lg:flex-[0_0_25%] pl-3">
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                {product.image_url ? (
+                {productPhoto(product) ? (
                   <div className="aspect-square bg-gray-50">
-                    <CatalogImage src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
+                    <CatalogImage src={productPhoto(product)} alt={product.name} className="w-full h-full object-contain p-2" />
                   </div>
                 ) : (
                   <div className="aspect-square bg-gray-50 flex items-center justify-center text-gray-300">

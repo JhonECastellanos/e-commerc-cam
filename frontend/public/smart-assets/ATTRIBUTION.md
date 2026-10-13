@@ -2,6 +2,8 @@
 
 Estos recursos se utilizan exclusivamente en la escena 3D, nunca como fotografías del catálogo de productos.
 
+- `house-reference-two-storeys.png`: imagen de referencia proporcionada por el propietario para la casa de dos niveles. Se conserva como referencia, separada del render interactivo.
+
 - Sofa 02 (utilizado) y Sofa 03 (variante): https://polyhaven.com/a/sofa_02 , https://polyhaven.com/a/sofa_03 — Poly Haven, CC0. El sofá utilizado conserva su geometría y relieve, con tapizado de color adaptado a la referencia.
 - Potted Plant 04: https://polyhaven.com/a/potted_plant_04 — Poly Haven, CC0.
 - Fern 02: https://polyhaven.com/a/fern_02 — Poly Haven, CC0.

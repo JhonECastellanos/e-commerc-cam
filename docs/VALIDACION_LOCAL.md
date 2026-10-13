@@ -1,5 +1,19 @@
 # Validación local de la integración
 
+## Estado actual — consolidación del 13 de octubre de 2026
+
+La carpeta operativa es `e-commerc-cam`, rama `feature/unificacion-catalogo-casa-3d`. Git es independiente del worktree anterior; las fuentes antiguas se respaldaron en un archivo tar.gz verificado (4.221 entradas), con SHA256 `87de996839e5b2b3bac2fb709bd63faf645601131617dae52f96d0fb68eba5dc`. Su retirada definitiva está pendiente de la autorización específica solicitada por la revisión automática.
+
+Se conservaron las 132 fotografías de `CATALOGO` y se publicaron derivados WebP (9,53 MB) con manifiesto de rutas y hashes. El inventario público contiene 286 recursos: 154 originales y 132 fotografías; los recursos de los modelos se excluyen. Los kits se vinculan por marca, resolución, modalidad y número de cámaras; los productos genéricos sin modelo siguen pendientes de asociación por administración.
+
+La casa tiene dos niveles visuales, terraza acristalada, escalera exterior, jardín, patio y vistas por planta. Los estados de luces, TV, panel y servidor conservan su motor y formato de asesoría. Las pruebas de UI detectaron y corrigieron una dependencia React que impedía actualizar la visibilidad por planta. El recorrido cambia de altura al elegir habitación; no simula subir físicamente la escalera. El acabado se inspira en la referencia y no reproduce su calidad fotográfica exacta.
+
+Compilación local correcta; 85 pruebas pytest y Ruff pasan. Los 33 casos unitarios de frontend se verificaron (32 en la ejecución completa y los tres nuevos de fotos tras corregir la ruta Windows). Todas las imágenes respondieron y se decodificaron en escritorio y móvil. La prueba administrativa heredada había escrito una imagen de QA de un píxel y una solicitud ficticia: ambas referencias de negocio se restauraron con autorización específica, sin modificar otros registros. Las pruebas administrativas con escrituras ahora requieren `E2E_ADMIN_MUTATIONS=1` y un entorno QA seleccionado expresamente; están deshabilitadas por defecto.
+
+Las secciones siguientes son el historial de validaciones anteriores, no la estructura operativa actual. Guía de clips: [SECUENCIAS_ISOMETRICAS.md](SECUENCIAS_ISOMETRICAS.md). Organización: [ORGANIZACION.md](ORGANIZACION.md).
+
+La ejecución final de `playwright test platform.spec.ts` aprobó los diez casos en escritorio y móvil emulado sobre build estable: carrusel, dos modelos, luces/TV con diferencias de píxeles, guardado, eventos, niveles, recorrido, adjunto a asesoría y todas las imágenes del manifiesto. Se revisaron capturas reales del nuevo render. Una ejecución inicial del apartamento agotó el límite de 45 s mientras se construía Docker; los casos gráficos disponen de 90 s para el render por software. Los fallos iniciales de planta quedaron corregidos y verificados.
+
 Fecha: 12 de octubre de 2026. Rama: `feature/integracion-smarthome-3d`. Aplicación compilada: `http://localhost:8094`, proyecto Docker `instalacam-integracion-local`, con volúmenes nuevos y datos de prueba.
 
 | Comprobación | Resultado |
