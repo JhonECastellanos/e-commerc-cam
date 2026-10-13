@@ -12,6 +12,7 @@ export type DeviceKind =
   | 'switch'
   | 'outlet'
   | 'light'
+  | 'television'
   | 'server'
   | 'network'
   | 'rack';
@@ -66,6 +67,7 @@ export const DEVICE_TYPES: Record<
     installationPoints: number;
   }
 > = {
+  television: { label: 'Televisor', short: 'TV', color: '#d6b37c', height: 1.35, installationPoints: 0 },
   cctv: {
     label: 'Cámara CCTV',
     short: 'CCTV',
@@ -396,6 +398,7 @@ export function interpretCommand(
     };
   const types: [RegExp, DeviceKind[]][] = [
     [/lu[zc]|iluminacion|bombill/, ['light']],
+    [/\btv\b|televisor|television|tele\b/, ['television']],
     [/camara|cctv/, ['cctv', 'ip-camera']],
     [/toma|enchufe/, ['outlet']],
     [/altavo[cz]|parlante/, ['speaker']],
@@ -415,6 +418,10 @@ export function interpretCommand(
   const rooms = ROOMS[config.scenario].filter(
     (r) => command.includes(normalize(r.name)) || command.includes(r.id),
   );
+  const unique = config.devices.filter(d => kind[1].includes(d.kind));
+  if (!rooms.length && unique.length === 1) {
+    return { action: { ids: [unique[0].id], on }, reply: `${on ? 'Encendí' : 'Apagué'} ${unique[0].name.toLowerCase()}.` };
+  }
   const targets = config.devices.filter(
     (d) =>
       kind[1].includes(d.kind) &&
@@ -433,7 +440,7 @@ export function interpretCommand(
   if (!targets.length)
     return {
       reply:
-        'No hay dispositivos de ese tipo en el espacio indicado. Instálalos primero desde Equipos.',
+        'No hay dispositivos de ese tipo en el espacio indicado.',
     };
   return {
     action: { ids: targets.map((d) => d.id), on },

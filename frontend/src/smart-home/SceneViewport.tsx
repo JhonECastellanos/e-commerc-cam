@@ -8,11 +8,13 @@ import {
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import {
   buildProperty,
   buildDevice,
   coverageMesh,
   disposeObject,
+  watchMaterials,
   type PropertyModel,
 } from './models';
 import {
@@ -41,6 +43,7 @@ type Props = {
   walls?: boolean;
   coverage?: boolean;
   preview?: boolean;
+  daylight?: boolean;
   onSelect?: (id: string) => void;
   onPlace?: (room: string, x: number, z: number) => void;
   onMove?: (device: VirtualDevice) => void;
@@ -74,6 +77,10 @@ class PropertyRenderer {
   ray = new THREE.Raycaster();
   point = new THREE.Vector2();
   reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  ambient = new THREE.HemisphereLight('#fff1df', '#667782', .45);
+  sun = new THREE.DirectionalLight('#fff2d9', 1.8);
+  environment: THREE.WebGLRenderTarget;
+  unwatch: () => void;
 
   constructor(
     public host: HTMLDivElement,
@@ -88,12 +95,20 @@ class PropertyRenderer {
     this.renderer.setPixelRatio(
       Math.min(window.devicePixelRatio, props.preview ? 1.25 : 1.75),
     );
-    this.renderer.setClearColor('#dfe6df');
-    this.renderer.shadowMap.enabled = !props.preview;
+    this.renderer.setClearColor('#19262e');
+    this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMappingExposure = .95;
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    const studio = new RoomEnvironment();
+    this.environment = pmrem.fromScene(studio, .04);
+    this.scene.environment = this.environment.texture;
+    this.scene.environmentIntensity = .6;
+    studio.dispose();
+    pmrem.dispose();
+    this.unwatch = watchMaterials(this.invalidate);
     this.renderer.domElement.setAttribute(
       'aria-label',
       props.preview
@@ -103,11 +118,11 @@ class PropertyRenderer {
     this.renderer.domElement.setAttribute('data-testid', 'scene-canvas');
     this.renderer.domElement.tabIndex = props.preview ? -1 : 0;
     host.appendChild(this.renderer.domElement);
-    this.scene.add(new THREE.HemisphereLight('#fbf6e8', '#617579', 2.7));
-    const sun = new THREE.DirectionalLight('#fff3d1', 3.5);
+    this.scene.add(this.ambient);
+    const sun = this.sun;
     sun.position.set(-8, 19, 10);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(props.preview ? 768 : 1536, props.preview ? 768 : 1536);
     Object.assign(sun.shadow.camera, {
       left: -17,
       right: 17,
@@ -115,10 +130,12 @@ class PropertyRenderer {
       bottom: -17,
     });
     sun.shadow.bias = -0.001;
+    sun.shadow.normalBias = .025;
+    sun.shadow.radius = 3;
     this.scene.add(sun);
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(180, 180),
-      new THREE.MeshStandardMaterial({ color: '#dfe6df', roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: '#101b24', roughness: 1 }),
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.61;
@@ -197,6 +214,7 @@ class PropertyRenderer {
       ratio = w / h;
     this.renderer.setSize(w, h, false);
     this.perspective.aspect = ratio;
+    this.perspective.zoom = Math.min(this.current.config.scenario === 'casa' ? 1.45 : 1.7, Math.max(.75, ratio * 1.35));
     this.perspective.updateProjectionMatrix();
     const extent = this.current.config.scenario === 'casa' ? 14 : 9.5;
     this.orthographic.left = -extent * ratio;
@@ -219,7 +237,8 @@ class PropertyRenderer {
       this.camera.up.set(0, 0, -1);
     } else {
       this.camera.up.set(0, 1, 0);
-      this.camera.position.set(19, 19, 22);
+      const house = this.current.config.scenario === 'casa';
+      this.camera.position.set(house ? 18 : 15, house ? 28 : 22, house ? 25 : 20);
     }
     this.orbit.target.set(0, 0, 0);
     this.camera.lookAt(0, 0, 0);
@@ -267,7 +286,12 @@ class PropertyRenderer {
     this.current = props;
     this.model.roof.visible = Boolean(props.roof);
     this.model.walls.visible = props.walls !== false;
-    this.model.walls.scale.y = props.preview ? 0.36 : 1;
+    this.model.walls.children.forEach(wall => {
+      wall.scale.y = this.view === 'recorrido' || props.roof ? 1 : (wall.userData.cutaway ?? 1);
+    });
+    this.ambient.intensity = props.daylight === false ? .12 : .45;
+    this.sun.intensity = props.daylight === false ? .12 : 1.8;
+    this.scene.environmentIntensity = props.daylight === false ? .12 : .6;
     this.model.labels.forEach((l) => {
       l.visible = !props.preview && this.view !== 'recorrido';
     });
@@ -281,10 +305,11 @@ class PropertyRenderer {
       const obj = buildDevice(
         device,
         device.kind === 'light' && device.on ? lights++ < 6 : true,
+        props.config,
       );
       this.devices.add(obj);
       if (device.id === props.selected) {
-        if (this.view !== 'recorrido' && !props.preview && !props.placing)
+        if (props.onMove && this.view !== 'recorrido' && !props.preview && !props.placing)
           this.transform.attach(obj);
         const ring = new THREE.Mesh(
           new THREE.RingGeometry(0.4, 0.48, 32),
@@ -451,6 +476,8 @@ class PropertyRenderer {
     this.visibility.disconnect();
     this.orbit.dispose();
     this.transform.dispose();
+    this.unwatch();
+    this.environment.dispose();
     const c = this.renderer.domElement;
     c.removeEventListener('pointerdown', this.pointerDown);
     c.removeEventListener('pointerup', this.pointerUp);
@@ -462,6 +489,7 @@ class PropertyRenderer {
     c.removeEventListener('webglcontextlost', this.contextLost);
     disposeObject(this.scene);
     this.renderer.dispose();
+    this.renderer.forceContextLoss();
     c.remove();
   }
 }
@@ -510,6 +538,7 @@ const SceneViewport = forwardRef<ViewportHandle, Props>(
         props.roof,
         props.walls,
         props.coverage,
+        props.daylight,
       ],
     );
     return (

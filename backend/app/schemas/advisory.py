@@ -13,6 +13,7 @@ DeviceKind = Literal[
     "switch",
     "outlet",
     "light",
+    "television",
     "server",
     "network",
     "rack",

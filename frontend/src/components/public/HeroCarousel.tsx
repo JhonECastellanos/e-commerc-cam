@@ -12,7 +12,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import CatalogImage from './CatalogImage';
-import { initialConfiguration, type Scenario } from '../../smart-home/domain';
+import { type Scenario } from '../../smart-home/domain';
+import { showcaseConfiguration } from '../../smart-home/showcase';
 import '../../smart-home/smart-home.css';
 const SceneViewport = lazy(() => import('../../smart-home/SceneViewport'));
 function embedURL(url?: string) {
@@ -30,7 +31,7 @@ function PropertyPreview({
   scenario: Scenario;
   active: boolean;
 }) {
-  const config = useMemo(() => initialConfiguration(scenario), [scenario]);
+  const config = useMemo(() => showcaseConfiguration(scenario), [scenario]);
   return (
     <div className="lab-preview">
       {active ? (
@@ -134,9 +135,9 @@ export default function HeroCarousel({ settings }: { settings: any }) {
                       {slide.title}
                     </h2>
                     <p className="text-primary-100 mt-5 mb-7 max-w-md">
-                      Recorre las habitaciones. Ubica cámaras, sensores y luces.
-                      Prueba automatizaciones y comparte tu diseño con un
-                      asesor.
+                      Recorre el hogar y descubre sus puntos inteligentes.
+                      Enciende la iluminación y la TV, conoce el servidor local
+                      y solicita una solución adaptada a tu vivienda.
                     </p>
                     <Link
                       className="bg-white text-primary-700 font-bold px-6 py-3 rounded-lg w-fit"
@@ -238,7 +239,11 @@ export default function HeroCarousel({ settings }: { settings: any }) {
         {slides.map((slide, i) => (
           <button
             key={slide.id}
-            onClick={() => embla?.scrollTo(i)}
+            onClick={() => {
+              embla?.plugins().autoplay?.stop();
+              setPaused(true);
+              embla?.scrollTo(i);
+            }}
             aria-label={
               slide.scenario
                 ? `Ver ${slide.scenario} 3D en carrusel`
