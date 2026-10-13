@@ -28,3 +28,4 @@ frontend/playwright-report/
 *-audit.json
 !docs/catalog-asset-audit.json
 .npm-cache/
+.local/

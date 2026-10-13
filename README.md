@@ -38,7 +38,13 @@ La rama de integración agrega dos laboratorios 3D reales (casa y apartamento), 
 
 El iniciador conserva `.env` si existe; si no, genera credenciales aleatorias locales. `detener.cmd` detiene únicamente la instancia integrada y conserva sus datos. Los puertos se pueden ajustar en `.env`.
 
-Todos los servicios normales (`frontend`, `backend`, `db`) pertenecen al grupo Docker Compose **`e-commerc-cam`**. La configuración de pruebas usa exclusivamente `compose.qa.yml` y el grupo `instalacam-integracion-qa`. La [organización de contenedores y volúmenes](docs/INTEGRACION_SMARTHOME.md#organización-de-contenedores) documenta cómo se conservan los datos actuales e históricos.
+Todos los servicios normales (`frontend`, `backend`, `db`) y el túnel opcional `cloudflared` pertenecen al grupo Docker Compose **`e-commerc-cam`**. La configuración de pruebas usa exclusivamente `compose.qa.yml` y el grupo `instalacam-integracion-qa`. La [organización de contenedores y volúmenes](docs/INTEGRACION_SMARTHOME.md#organización-de-contenedores) documenta cómo se conservan los datos actuales e históricos.
+
+### Enlace de validación por Cloudflare
+
+Con la plataforma local iniciada, ejecutar `iniciar-cloudflare.cmd` en esta carpeta. Reutiliza el túnel del e-commerce cuando está activo y muestra su enlace HTTPS. `iniciar-cloudflare.cmd -Renovar` genera otro enlace. El destino es el servicio `frontend:8080` de este proyecto, cuya URL local es **http://localhost:8094**. No comparte red, credenciales ni túnel con otras aplicaciones.
+
+El iniciador configura únicamente el dominio exacto generado en los hosts permitidos y los orígenes de la API. Conserva `.env`, las credenciales y los volúmenes; `.env.cloudflare` y `.local/cloudflare-url.txt` son archivos locales excluidos de Git. La base existente se reutiliza sin ejecutar de nuevo la semilla. Una vez activado, `iniciar.cmd` también reconecta este túnel y muestra la URL actual; `detener.cmd` detiene los cuatro servicios. Después de reiniciar Docker se debe ejecutar uno de los iniciadores. Para un dominio permanente se debe configurar un túnel con dominio propio. [Documentación oficial](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/).
 
 ### Frontend solo (hot reload)
 

@@ -20,7 +20,11 @@ services:
   backend:
     image: e-commerc-cam-backend
     build: ./backend
-    env_file: .env
+    env_file:
+      - path: .env
+        required: true
+      - path: .env.cloudflare
+        required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-instalacam}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-instalacam}
     ports:
@@ -49,8 +53,29 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    networks: [default, cloudflare]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
+
+  cloudflared:
+    image: cloudflare/cloudflared@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c
+    profiles: [cloudflare]
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://frontend:8080"]
+    depends_on:
+      frontend:
+        condition: service_healthy
+    networks: [cloudflare]
+    restart: "no"
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  cloudflare:
 
 volumes:
   pgdata:
