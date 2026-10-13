@@ -56,8 +56,10 @@ for(const scenario of ['casa','apartamento'])test(`${scenario}: architectural pr
   await page.getByRole('button',{name:'Sala',exact:true}).click();
   await expect(page.getByLabel('Controles táctiles de recorrido')).toBeVisible();
   await page.getByRole('button',{name:'Isométrica',exact:true}).click();
+  if(scenario==='casa')await page.getByRole('button',{name:'Planta alta',exact:true}).click();
   await page.getByRole('tab',{name:'Servidor local',exact:true}).click();
   await page.getByRole('button',{name:'Ver ubicación del servidor'}).click();
+  if(scenario==='casa')await expect(page.getByRole('button',{name:'Casa completa',exact:true})).toHaveAttribute('aria-pressed','true');
   await page.getByRole('button',{name:'Centrar vista',exact:true}).click();
   await page.screenshot({path:`test-results/${info.project.name}-${scenario}-showcase.png`,fullPage:true});
   expect(errors).toEqual([]);
@@ -92,7 +94,8 @@ test('all catalog image URLs respond and decoded images render', async ({
     expect(image.ok(), url).toBeTruthy();
     expect(image.headers()['content-type']).toMatch(/^image\//);
   }
-  await page.goto('/catalogo');
+  const catalogPage=await page.goto('/catalogo');
+  expect(catalogPage?.status()).toBe(200);
   const decoded = await page.evaluate(async (sources: string[]) =>
     Promise.all(sources.map(async (src) => {
       const image = new Image();

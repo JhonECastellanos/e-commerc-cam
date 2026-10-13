@@ -14,6 +14,8 @@ Las secciones siguientes son el historial de validaciones anteriores, no la estr
 
 La ejecución final de `playwright test platform.spec.ts` aprobó los diez casos en escritorio y móvil emulado sobre build estable: carrusel, dos modelos, luces/TV con diferencias de píxeles, guardado, eventos, niveles, recorrido, adjunto a asesoría y todas las imágenes del manifiesto. Se revisaron capturas reales del nuevo render. Una ejecución inicial del apartamento agotó el límite de 45 s mientras se construía Docker; los casos gráficos disponen de 90 s para el render por software. Los fallos iniciales de planta quedaron corregidos y verificados.
 
+La comprobación HTTPS posterior detectó un 403 en la entrada directa `/catalogo`, por coincidencia con el directorio de fotografías: se añadieron las rutas SPA exactas en Nginx, conservando la entrega de WebP. Se ajustó además el enfoque del servidor desde una planta oculta y se restringió el recorrido a la altura de la planta correspondiente; para cambiar de nivel se utilizan los botones de habitación.
+
 Fecha: 12 de octubre de 2026. Rama: `feature/integracion-smarthome-3d`. Aplicación compilada: `http://localhost:8094`, proyecto Docker `instalacam-integracion-local`, con volúmenes nuevos y datos de prueba.
 
 | Comprobación | Resultado |
