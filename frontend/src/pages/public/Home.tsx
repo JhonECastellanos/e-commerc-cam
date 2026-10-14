@@ -23,7 +23,7 @@ export default function Home() {
     setBrands(b.value); if (c.status === 'rejected' || p.status === 'rejected')
     setError('Una parte del catálogo no está disponible. Puedes solicitar la cotización y volver a consultar.'); setLoading(false); }); return () => { active = false; }; }, []);
   const promoted = combos.filter(c => c.is_bestseller || c.is_budget), featured = promoted.length ? promoted : combos.slice(0, 3);
-  return <main className="commerce-home"><HeroCarousel settings={settings}/><InstallationModes /><PropertyDemos />
+  return <div className="commerce-home"><HeroCarousel settings={settings}/><InstallationModes /><PropertyDemos />
   {error && <p className="commerce-container commerce-error" role="alert">{error}</p>}
   {(loading || featured.length > 0) && <section className="commerce-section featured-section" aria-labelledby="featured-combos"><div className="commerce-container"><div className="commerce-section-heading"><div><p className="commerce-eyebrow">CCTV con instalación</p><h2 id="featured-combos">{promoted.length ? 'Combos destacados y opciones económicas' : 'Combos destacados para empezar'}</h2></div><p>Compara la marca, cantidad, resolución y precio total. Confirma cobertura y alcance de instalación con un asesor.</p></div>{loading ? <p role="status">Cargando combos y precios…</p> : <div className="commerce-combo-grid">{featured.map(c => <ComboCard key={c.id} combo={c}/>)}</div>}</div></section>}
   {!loading && <ContratarWizard combos={combos} brands={brands}/>}
@@ -31,5 +31,5 @@ export default function Home() {
   {!loading && <ProductGallery products={products}/>}<SmartServices />
   <section className="commerce-section" aria-labelledby="home-faq"><div className="commerce-container faq-layout"><div><p className="commerce-eyebrow">Antes de contratar</p><h2 id="home-faq">Preguntas frecuentes</h2><p className="commerce-muted">Te ayudamos a distinguir lo incluido y lo que requiere revisar tu inmueble.</p><WhatsappCTA message="Hola, tengo dudas sobre cámaras, cobertura e instalación."/></div><div className="commerce-faq">{[1, 2, 3, 4].map(n => <details key={n}><summary>{t(`home.faq_${n}_q`)}</summary><p>{t(`home.faq_${n}_a`)}</p></details>)}<Link to="/faq" className="commerce-text-button">Ver todas las preguntas →</Link></div></div></section>
   <section className="commerce-contact"><div className="commerce-container"><div><p className="commerce-eyebrow">Tu siguiente paso</p><h2>Hablemos de las cámaras que necesitas</h2><p>Cuéntanos dónde quieres instalarlas. Revisamos equipos, cobertura y alcance antes de confirmar la propuesta.</p></div><WhatsappCTA message="Hola, quiero cotizar cámaras y su instalación. ¿Podemos revisar mi inmueble?"/></div></section>
- </main>;
+ </div>;
 }

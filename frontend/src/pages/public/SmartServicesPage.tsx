@@ -20,7 +20,8 @@ export default function SmartServicesPage() {
   });
   const proposal = serviceCostProposal(input);
   return (
-    <main className="commerce-surface">
+    <div className="commerce-surface">
+      <h1 className="sr-only">Servicios de casa inteligente y asesoría</h1>
       <SmartServices />
       <div className="max-w-6xl mx-auto px-4 py-14">
         <div className="grid md:grid-cols-3 gap-6 mb-14">
@@ -256,6 +257,6 @@ export default function SmartServicesPage() {
           <AdvisoryWizard />
         </section>
       </div>
-    </main>
+    </div>
   );
 }
