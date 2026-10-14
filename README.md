@@ -6,6 +6,8 @@ La rama de integración agrega dos laboratorios 3D reales (casa y apartamento), 
 
 ## Tecnologías
 
+La portada prioriza cámaras e instalación con precios publicados y WhatsApp configurable. Las demos inteligentes se presentan como servicio secundario bajo cotización. [Presentación comercial, catálogo original e importación administrativa](docs/PRESENTACION_CCTV.md).
+
 | Capa | Tecnología |
 |------|-----------|
 | Frontend | React + TypeScript + Vite + Tailwind CSS |
