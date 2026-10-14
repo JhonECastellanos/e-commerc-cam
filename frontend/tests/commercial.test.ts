@@ -55,4 +55,8 @@ describe('Contacto configurable y fotos originales',()=>{
     expect(products[0].gallery[0]).toBe('/api/uploads/real.webp');
     expect(products[0].sku).toBe(source.sku);
   });
+  it('conserva el orden administrativo entre equipos con fotografías',()=>{
+    const products=commercialProducts([{id:91,name:'Z cámara',image_url:'/api/uploads/z.webp'},{id:92,name:'A cámara',image_url:'/api/uploads/a.webp'}]);
+    expect(products.map(p=>p.id)).toEqual([91,92]);
+  });
 });
