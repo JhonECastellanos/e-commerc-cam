@@ -1,0 +1,101 @@
+import { test, expect } from '@playwright/test';
+
+// Isolate the provider in control tests: actual playback is checked separately against YouTube.
+const playerStub=`window.__videoCommands=[];window.YT={Player:function(node,options){const frame=document.createElement('iframe');frame.title='Vídeo de referencia de videovigilancia';node.replaceWith(frame);this.mute=()=>{};this.playVideo=()=>window.__videoCommands.push('play');this.pauseVideo=()=>window.__videoCommands.push('pause');this.destroy=()=>frame.remove();setTimeout(()=>options.events.onReady(),0);}};window.onYouTubeIframeAPIReady();`;
+test.beforeEach(async({page})=>{
+  await page.route('https://www.youtube.com/iframe_api',route=>route.fulfill({contentType:'text/javascript',body:playerStub}));
+});
+
+test('camera answers survive back navigation and reach WhatsApp and checkout',async({page})=>{
+  await page.goto('/');
+  const wizard=page.locator('#contratar-camaras');
+  await wizard.getByRole('button',{name:'Encontrar mis cámaras'}).click();
+  await wizard.getByRole('button',{name:'Casa',exact:true}).click();
+  await wizard.getByRole('button',{name:'Interior y exterior',exact:true}).click();
+  await wizard.getByRole('button',{name:'Acceso y fachada',exact:true}).click();
+  await wizard.getByLabel('Número de áreas').fill('3');
+  await wizard.getByRole('button',{name:'Continuar',exact:true}).click();
+  await wizard.getByRole('button',{name:'Volver',exact:true}).click();
+  await expect(wizard.getByLabel('Número de áreas')).toHaveValue('3');
+  await wizard.getByRole('button',{name:'Continuar',exact:true}).click();
+  await wizard.getByRole('button',{name:'Precio',exact:true}).click();
+  await wizard.getByRole('button',{name:'Es una instalación nueva',exact:true}).click();
+  await wizard.getByRole('button',{name:'Red por cable',exact:true}).click();
+  await wizard.getByRole('button',{name:'Durante el próximo mes',exact:true}).click();
+  await expect(wizard.getByRole('heading',{name:'Un combo de 4 cámaras puede ser adecuado'})).toBeVisible();
+  const url=new URL(await wizard.getByRole('link',{name:'Enviar mis respuestas por WhatsApp'}).getAttribute('href')||'');
+  expect(url.hostname).toBe('wa.me');
+  expect(url.searchParams.get('text')).toContain('Áreas: 3');
+  expect(url.searchParams.get('text')).toContain('Exterior: acceso');
+  await wizard.getByRole('button',{name:'Continuar con este combo'}).first().click();
+  await expect(page).toHaveURL(/checkout\/\d+/);
+  await expect(page.getByRole('region',{name:'Perfil de cámaras para la cotización'})).toContainText('Áreas: 3');
+  await page.reload();
+  await expect(page.getByRole('region',{name:'Perfil de cámaras para la cotización'})).toContainText('Inmueble: Casa');
+});
+
+test('office questions are conditional; original catalogue photos, filters and details render',async({page},info)=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.goto('/');
+  const wizard=page.locator('#contratar-camaras');
+  await wizard.getByRole('button',{name:'Encontrar mis cámaras'}).click();
+  await wizard.getByRole('button',{name:'Oficina',exact:true}).click();
+  await wizard.getByRole('button',{name:'Interior',exact:true}).click();
+  await expect(wizard.getByRole('heading',{name:'¿Cuántos accesos quieres vigilar?'})).toBeVisible();
+  await expect(wizard.getByRole('button',{name:'Jardín o patio'})).toHaveCount(0);
+  await page.goto('/catalogo');
+  const products=page.locator('#productos');
+  await expect(products.getByRole('status')).toContainText('44 equipos');
+  await products.getByRole('combobox',{name:'Marca',exact:true}).selectOption('HiLook');
+  await expect(products.getByRole('listitem').first().getByRole('img')).toBeVisible();
+  await products.locator('img').first().scrollIntoViewIfNeeded();
+  await expect.poll(()=>products.locator('img').first().evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
+  await products.getByRole('button',{name:'Ver detalle',exact:true}).first().click();
+  await expect(page.getByRole('dialog')).toContainText('Código catálogo: IC-');
+  await expect(page.getByRole('dialog').getByRole('link',{name:'Consultar por WhatsApp'})).toHaveAttribute('href',/^https:\/\/wa\.me\/\d+\?text=/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toBeHidden();
+  expect(errors).toEqual([]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.goto('/');
+  await page.screenshot({path:`test-results/${info.project.name}-commerce-home.png`,fullPage:true});
+});
+
+test('video pause controls reach the ready player',async({page})=>{
+  await page.goto('/');
+  await expect(page.locator('.youtube-media iframe')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands)).toContain('play');
+  await page.getByRole('button',{name:'Pausar vídeo y carrusel'}).click();
+  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('pause');
+  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
+  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('play');
+});
+
+test('reduced motion waits for explicit playback',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/');
+  await expect(page.getByRole('button',{name:'Reproducir vídeo y carrusel'})).toBeVisible();
+  expect(await page.evaluate(()=>Array.from(document.scripts).some(s=>s.src==='https://www.youtube.com/iframe_api'))).toBe(false);
+  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
+  await expect(page.locator('.youtube-media iframe')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('play');
+});
+
+test('administrative banners rotate and retain manual navigation',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.clock.install();
+  await page.route('**/api/banners',route=>route.fulfill({json:[
+    {id:1,title:'Seguridad para tu vivienda',image_url:'/images/cctv-diagram.svg'},
+    {id:2,title:'Instalación para tu negocio',image_url:'/images/cctv-diagram.svg'},
+  ]}));
+  await page.goto('/');
+  await expect(page.locator('.hero-slide')).toHaveCount(2);
+  await page.clock.runFor(14000);
+  await expect(page.getByRole('button',{name:'Ver diapositiva 2'})).toHaveAttribute('aria-current','true');
+  await expect(page.getByRole('heading',{name:'Instalación para tu negocio'})).toBeVisible();
+  await page.getByRole('button',{name:'Diapositiva anterior'}).click();
+  await page.clock.runFor(1500);
+  await expect(page.getByRole('button',{name:'Ver diapositiva 1'})).toHaveAttribute('aria-current','true');
+  await expect(page.getByRole('button',{name:'Reproducir vídeo y carrusel'})).toBeVisible();
+  expect(errors).toEqual([]);
+});

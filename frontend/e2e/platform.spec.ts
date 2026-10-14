@@ -17,7 +17,7 @@ test('carousel contains both real interactive scenarios',async({page},info)=>{
   await expect(page.locator('.lab-preview canvas')).toBeVisible();
   await page.getByRole('button',{name:'Ver casa 3D en carrusel'}).click();
   if(info.project.name==='desktop')await page.locator('.lab-preview canvas').dblclick();
-  else await page.getByRole('link',{name:'Configurar mi casa en 3D →',exact:true}).click();
+  else await page.locator('.demo-card').getByRole('link',{name:'Ver demo casa',exact:true}).click();
   await expect(page).toHaveURL(/simulador\/casa/);
   await expect(page.getByRole('heading',{name:'Casa inteligente',exact:true})).toBeVisible();
 });
@@ -70,7 +70,7 @@ test('strategic home is attached to advisory without submitting business data',a
   await page.goto('/simulador/apartamento');
   await page.getByRole('button',{name:'Solicitar asesoría para mi hogar',exact:true}).click();
   await expect(page).toHaveURL(/asesoria/);
-  await expect(page.getByText('Adjuntar mi diseño 3D')).toBeVisible();
+  await expect(page.getByText('Adjuntar la configuración de mi demo 3D')).toBeVisible();
   const design=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('instalacam:advisory-design')||'null'));
   expect(design.devices.some((d:{kind:string})=>d.kind==='television')).toBe(true);
   expect(design.devices.some((d:{kind:string})=>d.kind==='server')).toBe(true);
@@ -82,9 +82,13 @@ test('all catalog image URLs respond and decoded images render', async ({
   const response = await request.get('/api/combos');
   expect(response.ok()).toBeTruthy();
   const combos = await response.json();
+  const productResponse = await request.get('/api/products');
+  expect(productResponse.ok()).toBeTruthy();
+  const products = await productResponse.json();
   const urls = [
     ...new Set<string>([
       ...combos.map((c: any) => c.image_url).filter(Boolean),
+      ...products.map((p: any) => p.image_url).filter(Boolean),
       ...JSON.parse(readFileSync('src/data/image-manifest.json', 'utf8')),
     ]),
   ];

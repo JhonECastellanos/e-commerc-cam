@@ -1,211 +1,35 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import { api } from '../../api/client';
-import ContratarWizard from '../../components/public/ContratarWizard';
+import type { Combo, Product } from '../../utils/commercial';
 import HeroCarousel from '../../components/public/HeroCarousel';
-import ProductCarousel from '../../components/public/ProductCarousel';
-import BrandCarousel from '../../components/public/BrandCarousel';
+import InstallationModes from '../../components/public/InstallationModes';
+import PropertyDemos from '../../components/public/PropertyDemos';
+import ContratarWizard from '../../components/public/ContratarWizard';
+import ComboCard from '../../components/public/ComboCard';
+import ProductGallery from '../../components/public/ProductGallery';
 import SmartServices from '../../components/public/SmartServices';
-import AdvisoryWizard from '../../components/public/AdvisoryWizard';
-
-function FadeInSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-80px' }}
-      transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function StaggerChildren({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-50px' }}
-      variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function StaggerItem({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] } } }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
+import WhatsappCTA from '../../components/public/WhatsappCTA';
+import '../../commerce.css';
 export default function Home() {
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<any>({});
-  const [brands, setBrands] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      api.getPublicSettings(),
-      api.getBrands(),
-      api.getProducts(),
-    ]).then(([s, b, p]) => {
-      setSettings(s);
-      setBrands(b);
-      setProducts(p);
-    }).catch(console.error)
-    .finally(() => setLoading(false));
-  }, []);
-
-  const faqs = [
-    { q: t('home.faq_1_q'), a: t('home.faq_1_a') },
-    { q: t('home.faq_2_q'), a: t('home.faq_2_a') },
-    { q: t('home.faq_3_q'), a: t('home.faq_3_a') },
-    { q: t('home.faq_4_q'), a: t('home.faq_4_a') },
-  ];
-
-  return (
-    <div>
-      <FadeInSection>
-        <HeroCarousel settings={settings} />
-      </FadeInSection>
-
-      <FadeInSection delay={0.1}>
-        <ContratarWizard />
-      </FadeInSection>
-      <SmartServices />
-      <section className="max-w-4xl mx-auto px-4 py-14"><AdvisoryWizard /></section>
-
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInSection>
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="text-center md:text-left">
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">{t('about.title')}</h2>
-                <p className="text-lg text-gray-600 leading-relaxed">
-                  {t('about.desc_1')}
-                </p>
-              </div>
-              <div className="flex justify-center">
-                <img
-                  src={settings.about_image_url || '/images/tecnico-default.svg'}
-                  alt="Técnico profesional"
-                  width={640}
-                  height={480}
-                  loading="lazy"
-                  className="w-full max-w-md rounded-2xl shadow-lg object-cover"
-                  style={{ aspectRatio: '4/3' }}
-                />
-              </div>
-            </div>
-          </FadeInSection>
-        </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInSection>
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">{t('home.features_title')}</h2>
-            <p className="text-center text-gray-500 mb-12 max-w-2xl mx-auto">{t('about.why_subtitle')}</p>
-          </FadeInSection>
-          <StaggerChildren>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { icon: '\u{1F6E0}\uFE0F', title: t('home.features_1_title'), desc: t('home.features_1_desc') },
-                { icon: '\u{1F4CD}', title: t('home.features_2_title'), desc: t('home.features_2_desc') },
-                { icon: '\u{1F6E1}\uFE0F', title: t('home.features_3_title'), desc: t('home.features_3_desc') },
-                { icon: '\u{1F4B3}', title: t('home.features_4_title'), desc: t('home.features_4_desc') },
-              ].map((feat, i) => (
-                <StaggerItem key={i}>
-                  <div className="text-center p-6">
-                    <div className="text-4xl mb-4">{feat.icon}</div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{feat.title}</h3>
-                    <p className="text-gray-600 text-sm">{feat.desc}</p>
-                  </div>
-                </StaggerItem>
-              ))}
-            </div>
-          </StaggerChildren>
-        </div>
-      </section>
-
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInSection>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-              <div className="min-w-0 md:col-span-3 flex flex-col min-h-[350px]">
-                {products.length > 0 && (
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Nuestros productos <span className="text-gray-400 font-normal text-base">({products.length})</span></h2>
-                    <ProductCarousel products={products} />
-                  </div>
-                )}
-                {!loading && (
-                  <div className="mt-auto pt-6 text-center md:text-left">
-                    <Link to="/catalogo" className="inline-block px-5 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors">
-                      {t('home.hero_cta')}
-                    </Link>
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 md:col-span-2">
-                {brands.length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 md:text-center lg:text-right">Trabajamos con las mejores marcas</h2>
-                    <BrandCarousel brands={brands} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </FadeInSection>
-        </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <FadeInSection>
-            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">{t('home.faq_title')}</h2>
-          </FadeInSection>
-          <StaggerChildren>
-            <div className="space-y-4">
-              {faqs.map((faq, i) => (
-                <StaggerItem key={i}>
-                  <details className="border border-gray-200 rounded-lg overflow-hidden">
-                    <summary className="px-6 py-4 font-medium text-gray-900 cursor-pointer hover:bg-gray-50">
-                      {faq.q}
-                    </summary>
-                    <p className="px-6 py-4 text-gray-600 border-t border-gray-100">
-                      {faq.a}
-                    </p>
-                  </details>
-                </StaggerItem>
-              ))}
-            </div>
-          </StaggerChildren>
-          <FadeInSection delay={0.2}>
-            <div className="text-center mt-8">
-              <Link
-                to="/asesoria"
-                className="text-primary-500 hover:text-primary-600 font-medium"
-              >
-                {t('home.faq_more')}
-              </Link>
-            </div>
-          </FadeInSection>
-        </div>
-      </section>
-    </div>
-  );
+  const [settings, setSettings] = useState({}), [combos, setCombos] = useState<Combo[]>([]), [products, setProducts] = useState<Product[]>([]), [brands, setBrands] = useState<any[]>([]), [loading, setLoading] = useState(true), [error, setError] = useState('');
+  useEffect(() => { let active = true; Promise.allSettled([api.getPublicSettings(), api.getCombos({}), api.getProducts(), api.getBrands()]).then(([s, c, p, b]) => { if (!active)
+    return; if (s.status === 'fulfilled')
+    setSettings(s.value); if (c.status === 'fulfilled')
+    setCombos(c.value); if (p.status === 'fulfilled')
+    setProducts(p.value); if (b.status === 'fulfilled')
+    setBrands(b.value); if (c.status === 'rejected' || p.status === 'rejected')
+    setError('Una parte del catálogo no está disponible. Puedes solicitar la cotización y volver a consultar.'); setLoading(false); }); return () => { active = false; }; }, []);
+  const promoted = combos.filter(c => c.is_bestseller || c.is_budget), featured = promoted.length ? promoted : combos.slice(0, 3);
+  return <main className="commerce-home"><HeroCarousel settings={settings}/><InstallationModes /><PropertyDemos />
+  {error && <p className="commerce-container commerce-error" role="alert">{error}</p>}
+  {(loading || featured.length > 0) && <section className="commerce-section featured-section" aria-labelledby="featured-combos"><div className="commerce-container"><div className="commerce-section-heading"><div><p className="commerce-eyebrow">CCTV con instalación</p><h2 id="featured-combos">{promoted.length ? 'Combos destacados y opciones económicas' : 'Combos destacados para empezar'}</h2></div><p>Compara la marca, cantidad, resolución y precio total. Confirma cobertura y alcance de instalación con un asesor.</p></div>{loading ? <p role="status">Cargando combos y precios…</p> : <div className="commerce-combo-grid">{featured.map(c => <ComboCard key={c.id} combo={c}/>)}</div>}</div></section>}
+  {!loading && <ContratarWizard combos={combos} brands={brands}/>}
+  <section className="commerce-section" aria-labelledby="home-combos"><div className="commerce-container"><div className="commerce-section-heading"><div><p className="commerce-eyebrow">Precio total, opciones claras</p><h2 id="home-combos">Combos de cámaras instalables</h2></div><Link className="commerce-text-button" to="/catalogo">Ver todo el catálogo →</Link></div>{loading ? <p role="status">Consultando catálogo…</p> : combos.length ? <div className="commerce-combo-grid">{combos.slice(0, 6).map(c => <ComboCard key={c.id} combo={c}/>)}</div> : <div className="commerce-empty"><p>Consulta un combo de 4, 8 o 12 cámaras según el alcance y disponibilidad.</p><WhatsappCTA message="Hola, necesito una propuesta CCTV con instalación para mi inmueble."/></div>}</div></section>
+  {!loading && <ProductGallery products={products}/>}<SmartServices />
+  <section className="commerce-section" aria-labelledby="home-faq"><div className="commerce-container faq-layout"><div><p className="commerce-eyebrow">Antes de contratar</p><h2 id="home-faq">Preguntas frecuentes</h2><p className="commerce-muted">Te ayudamos a distinguir lo incluido y lo que requiere revisar tu inmueble.</p><WhatsappCTA message="Hola, tengo dudas sobre cámaras, cobertura e instalación."/></div><div className="commerce-faq">{[1, 2, 3, 4].map(n => <details key={n}><summary>{t(`home.faq_${n}_q`)}</summary><p>{t(`home.faq_${n}_a`)}</p></details>)}<Link to="/faq" className="commerce-text-button">Ver todas las preguntas →</Link></div></div></section>
+  <section className="commerce-contact"><div className="commerce-container"><div><p className="commerce-eyebrow">Tu siguiente paso</p><h2>Hablemos de las cámaras que necesitas</h2><p>Cuéntanos dónde quieres instalarlas. Revisamos equipos, cobertura y alcance antes de confirmar la propuesta.</p></div><WhatsappCTA message="Hola, quiero cotizar cámaras y su instalación. ¿Podemos revisar mi inmueble?"/></div></section>
+ </main>;
 }

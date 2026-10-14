@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import CatalogImage, { imagePath } from '../../components/public/CatalogImage';
 import { comboPhotos } from '../../utils/catalogPhotos';
+import WhatsappCTA from '../../components/public/WhatsappCTA';
+import '../../commerce.css';
 
 const MODE_IMAGES: Record<string, string[]> = {
   cableado: ['combo-hero', 'camara-detalle', 'dvr-detalle'],
@@ -225,14 +227,7 @@ export default function ComboDetail() {
             >
               {t('catalog.reserve')}
             </Link>
-            <a
-              href={`https://wa.me/[COMPLETAR]?text=${encodeURIComponent(`Hola, quiero información sobre: ${combo.brand_name} - ${combo.cameras_count} cámaras ${combo.resolution} - ${modeLabels[combo.mode]}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline w-full text-center block"
-            >
-              {t('catalog.consult_whatsapp')}
-            </a>
+            <WhatsappCTA className="commerce-button commerce-button-green w-full" message={`Hola, quiero cotizar el combo ${combo.id}: ${combo.brand_name}, ${combo.cameras_count} cámaras ${combo.resolution}, ${modeLabels[combo.mode]}. Total publicado: ${formatPrice(priceData?.total||combo.final_price)}. Necesito confirmar la cobertura e instalación.`}/>
           </div>
         </div>
       </div>

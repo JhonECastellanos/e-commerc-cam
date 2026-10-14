@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import SmartServices from '../../components/public/SmartServices';
+import AdvisoryWizard from '../../components/public/AdvisoryWizard';
+import '../../commerce.css';
 import {
   commercialSources,
   formatCOP,
@@ -18,7 +20,7 @@ export default function SmartServicesPage() {
   });
   const proposal = serviceCostProposal(input);
   return (
-    <main>
+    <main className="commerce-surface">
       <SmartServices />
       <div className="max-w-6xl mx-auto px-4 py-14">
         <div className="grid md:grid-cols-3 gap-6 mb-14">
@@ -249,6 +251,9 @@ export default function SmartServicesPage() {
               Ver combos disponibles
             </Link>
           </div>
+        </section>
+        <section className="mt-14" aria-label="Asesoría para software e infraestructura inteligente">
+          <AdvisoryWizard />
         </section>
       </div>
     </main>

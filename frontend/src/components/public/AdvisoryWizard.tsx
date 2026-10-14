@@ -272,7 +272,7 @@ export default function AdvisoryWizard({
                 if (e.target.checked) change('property', design.scenario);
               }}
             />
-            Adjuntar mi diseño 3D de {design.scenario} · {design.devices.length}{' '}
+            Adjuntar la configuración de mi demo 3D de {design.scenario} · {design.devices.length}{' '}
             equipos virtuales
           </label>
         </div>

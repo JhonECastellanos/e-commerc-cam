@@ -24,6 +24,14 @@ export default defineConfig({
       '/api': {
         target: apiTarget,
         changeOrigin: true,
+        configure(proxy) {
+          proxy.on('proxyRes', (response, request) => {
+            if (/^\/api\/uploads\/.+\.webp(?:\?|$)/i.test(request.url || '') &&
+                response.headers['content-type'] === 'application/octet-stream') {
+              response.headers['content-type'] = 'image/webp';
+            }
+          });
+        },
       },
     },
   },
