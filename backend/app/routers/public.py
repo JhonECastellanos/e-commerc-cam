@@ -15,6 +15,8 @@ from app.models.setting import Setting
 from app.models.banner import Banner
 from app.models.product import Product
 from app.services.catalog_media import catalog_image
+from app.services.catalog_visibility import gallery, product_prices_visible
+from app.services.demo_media import public_demo_media
 from app.schemas import BrandOut, ComboPublic, CoverageAreaOut, SocialLinkOut, CustomComboSelection, CustomPriceIn, CustomPriceOut, BannerOut, ProductOut
 
 router = APIRouter()
@@ -69,6 +71,8 @@ async def get_combos(
     defaults = {s.key: Decimal(s.value) for s in fee_settings}
     output = []
     for c in combos:
+        if not gallery(c):
+            continue
         wireless = c.mode == "inalambrico"
         key = "install_fee_per_camera_wireless" if wireless else "install_fee_per_camera"
         fee = Decimal(str(c.install_fee)) if c.install_fee is not None else defaults.get(key, Decimal("50000" if wireless else "75000"))
@@ -91,7 +95,7 @@ async def get_combos(
             is_budget=c.is_budget,
             level=c.level,
             warranty_text=c.warranty_text,
-            image_url=catalog_image(c),
+            image_url=gallery(c)[0] if gallery(c) else catalog_image(c),
             specs=c.specs,
             storage_options=c.storage_options,
             install_complexity=c.install_complexity,
@@ -125,7 +129,7 @@ async def get_combo(combo_id: int, db: AsyncSession = Depends(get_db)):
         is_budget=c.is_budget,
         level=c.level,
         warranty_text=c.warranty_text,
-        image_url=catalog_image(c),
+        image_url=gallery(c)[0] if gallery(c) else catalog_image(c),
         specs=c.specs,
         storage_options=c.storage_options,
         install_complexity=c.install_complexity,
@@ -241,13 +245,18 @@ async def get_active_banners(db: AsyncSession = Depends(get_db)):
 @router.get("/products", response_model=list[ProductOut])
 async def get_active_products(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Product).options(joinedload(Product.brand)).where(Product.active.is_(True)).order_by(Product.sort_order, Product.id))
+    products = result.unique().scalars().all()
+    show_prices = await product_prices_visible(db)
     return [ProductOut.model_validate(product).model_copy(update={
         "brand_name": product.brand.name if product.brand else None,
-    }) for product in result.unique().scalars().all()]
+        "image_url": gallery(product)[0],
+        "price": product.price if show_prices else None,
+        "instalacion_price": product.instalacion_price if show_prices else None,
+    }) for product in products if gallery(product)]
 
 @router.get("/settings/public", response_model=dict)
 async def get_public_settings(db: AsyncSession = Depends(get_db)):
-    keys = ["urgency_message", "labor_warranty_months", "whatsapp_number", "about_image_url", "hero_demo_slides"]
+    keys = ["urgency_message", "labor_warranty_months", "whatsapp_number", "about_image_url", "hero_demo_slides", "show_product_prices"]
     result = await db.execute(select(Setting).where(Setting.key.in_(keys)))
     settings = {s.key: s.value for s in result.scalars().all()}
 
@@ -261,6 +270,8 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
         "labor_warranty_months": settings.get("labor_warranty_months", "[DEFINIR]"),
         "whatsapp_number": settings.get("whatsapp_number", "[COMPLETAR]"),
         "about_image_url": settings.get("about_image_url", "/images/tecnico-default.svg"),
+        "show_product_prices": settings.get("show_product_prices", "false") == "true",
+        "hero_media": await public_demo_media(db),
         "installed_count": installed_count,
         "hero_demo_slides": settings.get("hero_demo_slides", "house,apartment,functions,recording"),
         "payments_enabled": bool(runtime_settings.womppi_public_key and runtime_settings.womppi_webhook_secret),

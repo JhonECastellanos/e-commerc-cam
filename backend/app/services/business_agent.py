@@ -71,15 +71,19 @@ async def provider_models(db):
 async def catalogue(db):
     from app.routers.public import get_combos, get_install_fee
     from app.models.combo import Combo
+    from app.services.catalog_visibility import gallery, product_prices_visible
     combos = await get_combos(brand=None, mode=None, resolution=None, min_price=None, max_price=None, db=db)
     products = (await db.execute(select(Product).options(selectinload(Product.brand)).where(Product.active.is_(True)).order_by(Product.id))).scalars().all()
+    show_prices = await product_prices_visible(db)
     result = []
     for row in combos:
         model = await db.get(Combo, row.id)
         per_camera = await get_install_fee(db, row.mode, model)
         result.append({"type": "combo", "id": row.id, "name": row.name or f"Combo {row.cameras_count} cámaras {row.resolution}", "brand": row.brand_name, "category": model.categoria, "mode": row.mode, "cameras": row.cameras_count, "resolution": row.resolution, "equipment_price_cop": str(model.equipment_price), "installation_per_camera_cop": str(per_camera), "installation_price_cop": str(per_camera * row.cameras_count), "total_price_cop": str(row.final_price), "installation_included": row.instalacion_incluida, "image_url": row.image_url})
     for row in products:
-        result.append({"type": "product", "id": row.id, "name": row.name, "brand": row.brand.name if row.brand else "", "category": row.category, "equipment_price_cop": str(row.price) if row.price is not None else None, "installation_price_cop": str(row.instalacion_price) if row.instalacion_price is not None else None, "description": (row.description or "")[:500], "image_url": row.image_url})
+        if not gallery(row):
+            continue
+        result.append({"type": "product", "id": row.id, "name": row.name, "brand": row.brand.name if row.brand else "", "category": row.category, "equipment_price_cop": str(row.price) if show_prices and row.price is not None else None, "installation_price_cop": str(row.instalacion_price) if show_prices and row.instalacion_price is not None else None, "description": (row.description or "")[:500], "image_url": row.image_url})
     for ident, name, description in [
         ('software', 'Casa inteligente con software propio', 'Integración de cámaras, iluminación, TV y dispositivos IoT, asesoría y configuración según proyecto. Cotización personalizada; las demos son virtuales.'),
         ('server', 'Servidor local e IA', 'Servidor opcional para ejecutar software propio y conectar modelos de IA locales. Instalación, capacidad y equipos se cotizan según cantidad de dispositivos y proyecto.'),

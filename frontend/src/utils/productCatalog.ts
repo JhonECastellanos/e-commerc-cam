@@ -15,7 +15,7 @@ export function commercialProducts(products: Product[]): CatalogProduct[] {
     return { ...product, sku: source?.sku, model: source?.model, brand_name: product.brand_name || source?.brand, category: product.category || source?.category, specs: Object.fromEntries(Object.entries({ ...source?.specs, ...product.specs }).filter((entry): entry is [
         string,
         string
-      ] => typeof entry[1] === 'string')), gallery: [...new Set([actual, ...(source?.gallery || [])].filter((url): url is string => Boolean(url)))] };
+      ] => typeof entry[1] === 'string')), gallery: Array.isArray(product.specs?.catalog_images) ? product.specs.catalog_images : [...new Set([actual, ...(source?.gallery || [])].filter((url): url is string => Boolean(url)))] };
   });
   // Prioritize actual photographs while retaining the API's administrative order.
   return result.sort((a, b) => Number(Boolean(b.gallery.length)) - Number(Boolean(a.gallery.length)));

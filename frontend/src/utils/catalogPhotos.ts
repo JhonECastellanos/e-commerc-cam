@@ -1,8 +1,14 @@
 import photos from '../data/catalog-photos.json';
-type Combo = { name?: string; image_url?: string | null; brand_name?: string; mode?: string; resolution?: string; cameras_count?: number };
+type Combo = { specs?: Record<string, any>; name?: string; image_url?: string | null; brand_name?: string; mode?: string; resolution?: string; cameras_count?: number };
 export function comboPhotos(combo: Combo): string[] {
+  if (Array.isArray(combo.specs?.catalog_images)) return combo.specs.catalog_images;
   // An administrator's uploaded photograph always takes precedence.
-  if (combo.image_url && !combo.image_url.endsWith('.svg')) return [combo.image_url];
+  if (combo.image_url && !combo.image_url.endsWith('.svg')) {
+    const original=photos.find(photo=>photo.url===combo.image_url);
+    if(!original)return [combo.image_url];
+    const folder=original.source.slice(0,original.source.lastIndexOf('/'));
+    return photos.filter(photo=>photo.source.slice(0,photo.source.lastIndexOf('/'))===folder).map(photo=>photo.url);
+  }
   const brand = /hikvision|hilook/i.test(combo.brand_name || '') ? 'Hikvision_Hilook/combos_Hilook/' : /dahua|cooper/i.test(combo.brand_name || '') ? 'Dahua/combos/' : '';
   if (!brand || combo.mode !== 'cableado' || combo.resolution !== '2MP') return [];
   const candidates = photos.filter(p => {
@@ -19,7 +25,8 @@ export function comboPhotos(combo: Combo): string[] {
   const folder=chosen?.source.substring(0,chosen.source.lastIndexOf('/'));
   return candidates.filter(p=>p.source.substring(0,p.source.lastIndexOf('/'))===folder).sort((a,b)=>a.source.localeCompare(b.source,undefined,{numeric:true})).map(p=>p.url);
 }
-export function productPhoto(product: { image_url?: string | null; name: string; description?: string }): string | undefined {
+export function productPhoto(product: { specs?: Record<string, any>; image_url?: string | null; name: string; description?: string }): string | undefined {
+  if (Array.isArray(product.specs?.catalog_images)) return product.specs.catalog_images[0];
   if(product.image_url) return product.image_url;
   // Only explicit model references match. Generic seed records do not identify a SKU.
   const text=(product.name+' '+(product.description||'')).toLowerCase();

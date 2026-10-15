@@ -22,8 +22,8 @@ async def log_change(db: AsyncSession, user_id: int, entity_type: str, entity_id
         entity_type=entity_type,
         entity_id=entity_id,
         field_name=field_name,
-        old_value=str(old_value) if old_value is not None else None,
-        new_value=str(new_value) if new_value is not None else None,
+        old_value=(str(old_value)[:240] + " [resumen]" if len(str(old_value)) > 255 else str(old_value)) if old_value is not None else None,
+        new_value=(str(new_value)[:240] + " [resumen]" if len(str(new_value)) > 255 else str(new_value)) if new_value is not None else None,
     )
     db.add(log)
 
@@ -175,6 +175,13 @@ async def update_setting(
 ):
     result = await db.execute(select(Setting).where(Setting.key == key))
     setting = result.scalar_one_or_none()
+    if key == "show_product_prices":
+        if data.value not in {"true", "false"}:
+            raise HTTPException(422, "La visibilidad debe ser true o false")
+        if not setting:
+            setting = Setting(key=key, value="false", description="Mostrar precios de productos individuales")
+            db.add(setting)
+            await db.flush()
     if key == "hero_demo_slides":
         ids = data.value.split(",") if data.value else []
         if len(ids) != len(set(ids)) or any(item not in {"house", "apartment", "functions", "recording"} for item in ids):
@@ -248,8 +255,11 @@ async def upload_about_image(
     image_url = await store_public_image(file, "equipo", "about_tecnico")
     result = await db.execute(select(Setting).where(Setting.key == "about_image_url"))
     setting = result.scalar_one_or_none()
-    if setting:
+    if not setting:
+        setting = Setting(key="about_image_url", value=image_url)
+        db.add(setting)
+    else:
         setting.value = image_url
-        await db.commit()
-        await notify_clients()
+    await db.commit()
+    await notify_clients()
     return {"image_url": image_url}

@@ -7,9 +7,11 @@ from app.models.product import Product
 from app.models.brand import Brand
 from app.models.user import User
 from app.routers.admin_auth import get_current_user
+from app.routers.admin_prices import log_change
 from pydantic import BaseModel
 from typing import Optional
 from app.services.uploads import store_public_image
+from app.services.catalog_visibility import gallery, photograph
 
 router = APIRouter()
 
@@ -70,8 +72,21 @@ async def update_product_admin(
     p = result.unique().scalar_one_or_none()
     if not p:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
+    if data.specs is not None and "catalog_images" in data.specs:
+        images = data.specs["catalog_images"]
+        if not isinstance(images, list) or len(images) > 20 or any(not photograph(url) for url in images):
+            raise HTTPException(422, "La galería admite hasta 20 fotografías JPG, PNG o WebP")
     for field, value in data.model_dump(exclude_unset=True).items():
+        if field in {"price", "instalacion_price", "active"} and getattr(p, field) != value:
+            await log_change(db, user.id, "product", p.id, field, getattr(p, field), value)
         setattr(p, field, value)
+    if not gallery(p):
+        if data.active is True:
+            raise HTTPException(422, "Añade una fotografía real antes de publicar el producto")
+        p.active = False
+        p.image_url = None
+    else:
+        p.image_url = gallery(p)[0]
     await db.commit()
     await db.refresh(p)
     return ProductAdminOut(
@@ -95,7 +110,9 @@ async def upload_product_image(
     if not p:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     brand_slug = p.brand.slug if p.brand else "general"
+    previous = gallery(p)
     p.image_url = await store_public_image(file, f"catalog/{brand_slug}/productos", f"product_{product_id}")
+    p.specs = {**(p.specs or {}), "catalog_images": list(dict.fromkeys([p.image_url, *previous]))}
     await db.commit()
     return {"image_url": p.image_url}
 
@@ -115,7 +132,7 @@ async def create_product_admin(
 ):
     product = Product(name=name, brand_id=brand_id, description=description,
                       price=price, instalacion_price=instalacion_price,
-                      category=category, ganancia=ganancia, link=link, sort_order=sort_order)
+                      category=category, ganancia=ganancia, link=link, sort_order=sort_order, active=False)
     db.add(product)
     await db.commit()
     await db.refresh(product)
