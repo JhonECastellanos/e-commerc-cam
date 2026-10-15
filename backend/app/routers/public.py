@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from decimal import Decimal
@@ -45,7 +45,11 @@ async def get_combos(
     max_price: Optional[Decimal] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(Combo).options(joinedload(Combo.brand)).where(Combo.active.is_(True)).order_by(Combo.name.is_(None), Combo.id)
+    # Anonymous rows remain available to custom pricing, not as product cards.
+    query = select(Combo).options(joinedload(Combo.brand)).where(
+        Combo.active.is_(True),
+        or_(Combo.name.isnot(None), Combo.level.isnot(None)),
+    ).order_by(Combo.name.is_(None), Combo.id)
     if brand:
         query = query.join(Combo.brand).where(Brand.slug == brand)
     if mode:
