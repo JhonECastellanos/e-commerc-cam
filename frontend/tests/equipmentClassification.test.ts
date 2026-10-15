@@ -39,3 +39,9 @@ describe('Evidence-based installation and capability tree',()=>{
     expect(products.some(p=>p.category==='Servidor de IA')).toBe(false);
   });
 });
+
+it('uses only valid administrator classifications and hides internal classification keys from specs',()=>{
+ const product={id:1,name:'Grabador verificado',gallery:[],specs:{'Clasificacion manual':'si','Modalidades del catalogo':'cableado,hibrido,unknown','Funciones del catalogo':'recorder,motion,unknown'}};
+ expect(equipmentClassification(product).modes).toEqual(['cableado','hibrido']);
+ expect(equipmentClassification(product).functions).toEqual(['recorder','motion']);
+});

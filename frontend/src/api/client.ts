@@ -151,7 +151,7 @@ export const api = {
 
   adminGetCombosAdmin: () => request<any[]>('/admin/combos-admin'),
   adminCreateCombo: (data: URLSearchParams) =>
-    request<any>('/admin/combos-admin', { method: 'POST', body: data.toString(), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    request<any>(`/admin/combos-admin?${data.toString()}`, { method: 'POST' }),
   adminUpdateComboAdmin: (id: number, data: any) =>
     request<any>(`/admin/combos-admin/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   adminDeleteCombo: (id: number) =>
@@ -164,7 +164,7 @@ export const api = {
 
   adminGetProductsAdmin: () => request<any[]>('/admin/products-admin'),
   adminCreateProduct: (data: URLSearchParams) =>
-    request<any>('/admin/products-admin', { method: 'POST', body: data.toString(), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    request<any>(`/admin/products-admin?${data.toString()}`, { method: 'POST' }),
   adminUpdateProductAdmin: (id: number, data: any) =>
     request<any>(`/admin/products-admin/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   adminDeleteProduct: (id: number) =>

@@ -1,6 +1,7 @@
-import { useEffect, Fragment } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import '../../admin.css';
 import { useAdmin } from '../../context/AdminContext';
 
 export default function AdminLayout() {
@@ -8,6 +9,8 @@ export default function AdminLayout() {
   const { isAuthenticated, user, logout } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
+  const [menuOpen,setMenuOpen]=useState(false);
+  useEffect(()=>setMenuOpen(false),[location.pathname]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -18,23 +21,24 @@ export default function AdminLayout() {
   if (!isAuthenticated) return null;
 
   const navItems = [
-    { to: '/admin', label: t('admin.dashboard'), icon: '📊' },
-    { to: '/admin/combos', label: 'Combos', icon: '📦' },
-    { to: '/admin/productos', label: 'Productos', icon: '🛒' },
-    { to: '/admin/multimedia', label: 'Multimedia', icon: '🖼️' },
-    { to: '/admin/precios', label: t('admin.prices'), icon: '💰' },
-    { to: '/admin/ordenes', label: t('admin.orders'), icon: '📋' },
-    { to: '/admin/asesorias', label: 'Solicitudes de asesoría', icon: '🏠' },
-    { to: '/admin/notificaciones', label: t('admin.notifications'), icon: '🔔' },
-    { to: '/admin/redes', label: t('admin.social'), icon: '🔗' },
-    { to: '/admin/cobertura', label: t('admin.coverage'), icon: '📍' },
+    { to: '/admin', label: t('admin.dashboard'), icon: 'grid' },
+    { to: '/admin/combos', label: 'Combos', icon: 'grid' },
+    { to: '/admin/productos', label: 'Productos', icon: 'grid' },
+    { to: '/admin/multimedia', label: 'Multimedia', icon: 'grid' },
+    { to: '/admin/precios', label: t('admin.prices'), icon: 'grid' },
+    { to: '/admin/ordenes', label: t('admin.orders'), icon: 'grid' },
+    { to: '/admin/asesorias', label: 'Solicitudes de asesoría', icon: 'grid' },
+    { to: '/admin/notificaciones', label: t('admin.notifications'), icon: 'grid' },
+    { to: '/admin/redes', label: t('admin.social'), icon: 'grid' },
+    { to: '/admin/cobertura', label: t('admin.coverage'), icon: 'grid' },
   ];
 
   return (
     <Fragment>
       <meta name="robots" content="noindex" />
-      <div className="flex h-screen bg-gray-100">
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
+      <div className="admin-shell">
+      <header className="admin-mobile-header"><Link to="/">InstalaCámara</Link><button aria-expanded={menuOpen} aria-controls="admin-navigation" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen ? 'Cerrar menú' : 'Administrar'}</button></header>
+      <aside className={`admin-sidebar ${menuOpen ? 'admin-sidebar-open' : ''}`}>
         <div className="p-6 border-b border-gray-800">
           <Link to="/" className="text-xl font-bold text-white">
             InstalaCámara
@@ -42,18 +46,19 @@ export default function AdminLayout() {
           <p className="text-sm text-gray-400 mt-1 capitalize">{user?.name}</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav id="admin-navigation" aria-label="Administración" className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
+              aria-current={location.pathname === item.to ? 'page' : undefined}
               className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === item.to
+                (location.pathname === item.to || (item.to !== '/admin' && location.pathname.startsWith(item.to + '/')))
                   ? 'bg-primary-500 text-white'
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <span>{item.icon}</span>
+              <svg aria-hidden="true" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
               <span>{item.label}</span>
             </Link>
           ))}
@@ -81,7 +86,7 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="admin-main">
         <Outlet />
       </main>
     </div>
