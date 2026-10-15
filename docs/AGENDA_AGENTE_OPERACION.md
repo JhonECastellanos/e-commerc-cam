@@ -34,9 +34,10 @@ vuelven a comprobar solapamientos antes del commit. Los envíos usan idempotenci
 Para reactivar citas canceladas se debe Reprogramar y volver a reservar capacidad.
 
 El chat comercial funciona sin IA externa para orientación, catálogo, agenda y
-derivación. WhatsApp solo registra nuevos mensajes con intención comercial
+derivación. WhatsApp inicia atención cuando recibe una consulta comercial
 explícita (por ejemplo, los enlaces wa.me de la web incluyen InstalaCámara).
-No importa conversaciones ni contactos anteriores. ASESOR pausa automatización;
+No importa conversaciones ni contactos anteriores. Los mensajes posteriores de
+esa conversación se guardan en la bandeja, también durante la atención manual. ASESOR pausa automatización;
 BAJA/STOP detiene respuestas automáticas. La bandeja permite responder manualmente
 al cliente existente. Antes de usar un proveedor IA en WhatsApp se pide ACEPTO IA.
 
