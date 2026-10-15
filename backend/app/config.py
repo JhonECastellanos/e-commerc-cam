@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     log_json: bool = True
     max_request_body_bytes: int = 1_048_576
     max_upload_bytes: int = 5_242_880
+    max_video_upload_bytes: int = 31_457_280
     private_files_dir: str = "/app/private_agreements"
     rate_limit_login: int = 5
     rate_limit_order: int = 10
@@ -30,6 +31,8 @@ class Settings(BaseSettings):
     womppi_webhook_secret: str = ""
     whatsapp_provider: str = "off"
     whatsapp_number: str = ""
+    whatsapp_gateway_url: str = "http://whatsapp:3210"
+    whatsapp_gateway_token: str = ""
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.1-flash-lite"
     evolution_api_url: Optional[str] = None
@@ -90,7 +93,7 @@ class Settings(BaseSettings):
             raise RuntimeError("DATABASE_URL no puede usar credenciales de ejemplo en producción")
         if not self.cors_origins or any("localhost" in origin for origin in self.cors_origins):
             raise RuntimeError("FRONTEND_ORIGINS debe contener únicamente dominios de producción")
-        if not self.womppi_webhook_secret:
+        if (self.womppi_public_key or self.womppi_private_key) and not self.womppi_webhook_secret:
             raise RuntimeError("WOMPPI_WEBHOOK_SECRET es obligatorio en producción")
 
 

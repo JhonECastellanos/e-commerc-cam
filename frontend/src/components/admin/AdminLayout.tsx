@@ -28,6 +28,8 @@ export default function AdminLayout() {
     { to: '/admin/precios', label: t('admin.prices'), icon: 'grid' },
     { to: '/admin/ordenes', label: t('admin.orders'), icon: 'grid' },
     { to: '/admin/asesorias', label: 'Solicitudes de asesoría', icon: 'grid' },
+    { to: '/admin/agenda', label: 'Agenda y clientes', icon: 'grid' },
+    { to: '/admin/agente', label: 'Agente y WhatsApp', icon: 'grid' },
     { to: '/admin/notificaciones', label: t('admin.notifications'), icon: 'grid' },
     { to: '/admin/redes', label: t('admin.social'), icon: 'grid' },
     { to: '/admin/cobertura', label: t('admin.coverage'), icon: 'grid' },

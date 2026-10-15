@@ -15,6 +15,7 @@ export default function Header() {
     { to: '/catalogo', label: 'Cámaras y combos' },
     { to: '/servicios', label: 'Casa inteligente' },
     { to: '/asesoria', label: 'Asesoría' },
+    { to: '/agenda', label: 'Agenda' },
     { to: '/conocenos', label: t('nav.about') },
     { to: '/condiciones', label: t('nav.terms') },
   ];

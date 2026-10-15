@@ -20,6 +20,9 @@ const CoverageAreas = lazy(() => import('./pages/admin/CoverageAreas'));
 const CombosAdmin = lazy(() => import('./pages/admin/CombosAdmin'));
 const ProductosAdmin = lazy(() => import('./pages/admin/ProductosAdmin'));
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia'));
+const AdminAgenda = lazy(() => import('./pages/admin/AdminAgenda'));
+const AgentConsole = lazy(() => import('./pages/admin/AgentConsole'));
+const Agenda = lazy(() => import('./pages/public/Agenda'));
 
 import Advisory from './pages/public/Advisory';
 const Advisories = lazy(() => import('./pages/admin/Advisories'));
@@ -50,6 +53,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/catalogo" element={<Catalog />} />
           <Route path="/asesoria" element={<Advisory />} />
+          <Route path="/agenda" element={<Agenda />} />
           <Route path="/servicios" element={<SmartServicesPage />} />
           <Route path="/privacidad" element={<Privacy />} />
           <Route path="/faq" element={<FAQ />} />
@@ -74,6 +78,8 @@ export default function App() {
           <Route path="/admin/combos" element={<CombosAdmin />} />
           <Route path="/admin/productos" element={<ProductosAdmin />} />
           <Route path="/admin/multimedia" element={<AdminMedia />} />
+          <Route path="/admin/agenda" element={<AdminAgenda />} />
+          <Route path="/admin/agente" element={<AgentConsole />} />
           <Route path="/admin/cobertura" element={<CoverageAreas />} />
         </Route>
       </Routes>

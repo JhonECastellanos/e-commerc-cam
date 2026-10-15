@@ -197,6 +197,11 @@ export const api = {
     formData.append('file', file);
     return uploadForm<any>(`/api/admin/banners/${id}/upload`, formData);
   },
+  adminUploadBannerVideo: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return uploadForm<{video_url:string}>(`/api/admin/banners/${id}/upload-video`, formData);
+  },
   adminUploadBrandLogo: (id: number, file: File) => {
     const formData = new FormData();
     formData.append('file', file);

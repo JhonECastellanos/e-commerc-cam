@@ -27,6 +27,11 @@ Invoke-PlatformDocker ($taskCompose + @('up', '-d', '--no-deps', '--no-build', '
 # Lee únicamente la configuración de este backend; no imprime secretos.
 $taskBackend = (Invoke-PlatformDocker @('inspect', 'e-commerc-cam-backend-1') | Out-String | ConvertFrom-Json)[0]
 $taskOrigins = Get-AllowedSetting 'FRONTEND_ORIGINS' $taskBackend.Config.Env 'http://localhost:8094,http://127.0.0.1:8094'
+$taskProductionFile = Join-Path $taskRoot '.env.production-local'
+$taskProduction = (Get-AllowedSetting 'APP_ENV' $taskBackend.Config.Env '') -eq 'production' -or ((Test-Path -LiteralPath $taskProductionFile) -and ([IO.File]::ReadAllText($taskProductionFile) -match '(?m)^APP_ENV=production\s*$'))
+if ($taskProduction) {
+    $taskOrigins = (@($taskOrigins.Split(',') | Where-Object { $_ -match '^https://' -and $_ -notmatch 'localhost|127\.0\.0\.1' })) -join ','
+}
 $taskHosts = Get-AllowedSetting 'TRUSTED_HOSTS' $taskBackend.Config.Env 'localhost,127.0.0.1,testserver'
 $taskStart = $taskCompose + @('up', '-d', '--no-deps', '--no-build')
 if ($Renovar) { $taskStart += '--force-recreate' }

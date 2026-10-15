@@ -41,7 +41,7 @@ describe('Selección de cámaras',()=>{
 describe('Contacto configurable y fotos originales',()=>{
   it('codifica el mensaje y rechaza marcadores o destinos distintos de WhatsApp',()=>{
     const url=whatsappURL('+57 300 000 0000','Cámaras & instalación\nÁreas: 4');
-    expect(new URL(url!).searchParams.get('text')).toBe('Cámaras & instalación\nÁreas: 4');
+    expect(new URL(url!).searchParams.get('text')).toBe('Hola InstalaCámara. Cámaras & instalación\nÁreas: 4');
     expect(whatsappURL('[COMPLETAR]','Hola')).toBeUndefined();
     expect(configuredWhatsapp({whatsapp_number:'[COMPLETAR]'},[{platform:'whatsapp',url:'https://wa.me/573000000000'}])).toBe('573000000000');
     expect(configuredWhatsapp({},[{platform:'whatsapp',url:'https://example.com/573000000000'}])).toBeUndefined();
