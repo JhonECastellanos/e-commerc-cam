@@ -175,6 +175,14 @@ async def update_setting(
 ):
     result = await db.execute(select(Setting).where(Setting.key == key))
     setting = result.scalar_one_or_none()
+    if key == "hero_demo_slides":
+        ids = data.value.split(",") if data.value else []
+        if len(ids) != len(set(ids)) or any(item not in {"house", "apartment", "functions", "recording"} for item in ids):
+            raise HTTPException(status_code=422, detail="Selección de demos inválida")
+        if not setting:
+            setting = Setting(key=key, value="house,apartment,functions,recording", description="Demostraciones del carrusel principal")
+            db.add(setting)
+            await db.flush()
     if not setting:
         raise HTTPException(status_code=404, detail="Configuración no encontrada")
 

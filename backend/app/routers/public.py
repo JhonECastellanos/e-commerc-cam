@@ -45,7 +45,7 @@ async def get_combos(
     max_price: Optional[Decimal] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(Combo).options(joinedload(Combo.brand)).where(Combo.active.is_(True), Combo.level.isnot(None))
+    query = select(Combo).options(joinedload(Combo.brand)).where(Combo.active.is_(True)).order_by(Combo.name.is_(None), Combo.id)
     if brand:
         query = query.join(Combo.brand).where(Brand.slug == brand)
     if mode:
@@ -56,16 +56,26 @@ async def get_combos(
     result = await db.execute(query)
     combos = result.unique().scalars().all()
 
+    # Load both defaults once; returning the complete catalogue must not add one
+    # settings query per combo. An explicit zero installation fee is valid.
+    fee_settings = (await db.execute(select(Setting).where(Setting.key.in_(
+        ["install_fee_per_camera", "install_fee_per_camera_wireless"]
+    )))).scalars().all()
+    defaults = {s.key: Decimal(s.value) for s in fee_settings}
     output = []
     for c in combos:
-        fee = await get_install_fee(db, c.mode, c)
+        wireless = c.mode == "inalambrico"
+        key = "install_fee_per_camera_wireless" if wireless else "install_fee_per_camera"
+        fee = Decimal(str(c.install_fee)) if c.install_fee is not None else defaults.get(key, Decimal("50000" if wireless else "75000"))
         final_price = compute_final_price(c, fee)
-        if min_price and final_price < min_price:
+        if min_price is not None and final_price < min_price:
             continue
-        if max_price and final_price > max_price:
+        if max_price is not None and final_price > max_price:
             continue
         output.append(ComboPublic(
             id=c.id,
+            name=c.name,
+            instalacion_incluida=c.instalacion_incluida,
             brand_id=c.brand_id,
             brand_name=c.brand.name if c.brand else None,
             mode=c.mode,
@@ -98,6 +108,8 @@ async def get_combo(combo_id: int, db: AsyncSession = Depends(get_db)):
     final_price = compute_final_price(c, fee)
     return ComboPublic(
         id=c.id,
+        name=c.name,
+        instalacion_incluida=c.instalacion_incluida,
         brand_id=c.brand_id,
         brand_name=c.brand.name if c.brand else None,
         mode=c.mode,
@@ -223,12 +235,14 @@ async def get_active_banners(db: AsyncSession = Depends(get_db)):
 
 @router.get("/products", response_model=list[ProductOut])
 async def get_active_products(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).where(Product.active.is_(True)).order_by(Product.sort_order))
-    return result.scalars().all()
+    result = await db.execute(select(Product).options(joinedload(Product.brand)).where(Product.active.is_(True)).order_by(Product.sort_order, Product.id))
+    return [ProductOut.model_validate(product).model_copy(update={
+        "brand_name": product.brand.name if product.brand else None,
+    }) for product in result.unique().scalars().all()]
 
 @router.get("/settings/public", response_model=dict)
 async def get_public_settings(db: AsyncSession = Depends(get_db)):
-    keys = ["urgency_message", "labor_warranty_months", "whatsapp_number", "about_image_url"]
+    keys = ["urgency_message", "labor_warranty_months", "whatsapp_number", "about_image_url", "hero_demo_slides"]
     result = await db.execute(select(Setting).where(Setting.key.in_(keys)))
     settings = {s.key: s.value for s in result.scalars().all()}
 
@@ -243,4 +257,5 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
         "whatsapp_number": settings.get("whatsapp_number", "[COMPLETAR]"),
         "about_image_url": settings.get("about_image_url", "/images/tecnico-default.svg"),
         "installed_count": installed_count,
+        "hero_demo_slides": settings.get("hero_demo_slides", "house,apartment,functions,recording"),
     }
