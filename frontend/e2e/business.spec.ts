@@ -61,7 +61,26 @@ test('admin agent configuration, model search and proposal review work on mobile
   await page.getByRole('button',{name:'Confirmar cambio',exact:true}).click();
   await expect(page.getByRole('status')).toContainText('Cambio aplicado');
   await page.getByRole('tab',{name:'WhatsApp',exact:true}).click();
-  await expect(page.getByRole('status')).toContainText('disconnected');
+  await expect(page.getByRole('tabpanel',{name:'WhatsApp',exact:true}).getByRole('status')).toContainText('Desconectado');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`test-results/${info.project.name}-agente.png`,fullPage:true});
+});
+
+test('admin agenda persists classification and rating through the existing API screen',async({page},info)=>{
+  await adminSession(page);
+  let appointment={id:'appointment-qa',name:'Cliente QA aislado',contact:'qa@example.invalid',kind:'cctv_meeting',starts_at:'2026-10-20T15:00:00Z',ends_at:'2026-10-20T15:30:00Z',status:'confirmed',classification:'nuevo',rating:null as number|null,notes:'',source:'web'};
+  let writes=0;
+  await page.route('**/api/admin/agenda**',async route=>{const path=new URL(route.request().url()).pathname;let json:any;if(path==='/api/admin/agenda-rules')json={enabled:true,opens:8,closes:22,days:[0,1,2,3,4,5,6],lead_minutes:60,horizon_days:30};else if(route.request().method()==='PUT'){writes++;appointment={...appointment,...route.request().postDataJSON()};json=appointment}else json=[appointment];await route.fulfill({json})});
+  await page.goto('/admin/agenda');
+  await expect(page.getByRole('heading',{name:'Agenda y clientes',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Clasificar / calificar',exact:true}).click();
+  await page.getByLabel('Clasificación').selectOption('prioritario');
+  await page.getByLabel('Calificación manual').selectOption('5');
+  await page.getByLabel('Notas',{exact:true}).fill('Interesado en instalación con revisión de accesos.');
+  await page.getByRole('button',{name:'Guardar clasificación',exact:true}).click();
+  await expect(page.getByRole('status')).toContainText('Cambios guardados');
+  await expect(page.getByText('prioritario · 5/5 · web')).toBeVisible();
+  expect(writes).toBe(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`test-results/${info.project.name}-admin-agenda.png`,fullPage:true});
 });
