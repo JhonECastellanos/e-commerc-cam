@@ -28,7 +28,7 @@ test('camera answers survive back navigation and reach WhatsApp and checkout',as
   await expect(page.getByRole('region',{name:'Perfil de cámaras para la cotización'})).toContainText('Inmueble: Casa');
 });
 
-test('office questions are conditional; original catalogue photos, filters and details render',async({page},info)=>{
+test('office questions are conditional; original catalogue photos, filters and details render',async({page,request},info)=>{
   const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
   await page.goto('/');
   const wizard=page.locator('#contratar-camaras');
@@ -39,7 +39,9 @@ test('office questions are conditional; original catalogue photos, filters and d
   await expect(wizard.getByRole('button',{name:'Jardín o patio'})).toHaveCount(0);
   await page.goto('/catalogo');
   const products=page.locator('#productos');
-  await expect(products.getByRole('status')).toContainText('44 equipos');
+  const response=await request.get('/api/products');expect(response.ok()).toBeTruthy();
+  const published=await response.json();expect(published.length).toBeGreaterThan(0);
+  await expect(products.getByRole('status')).toContainText(`${published.length} equipos`);
   await products.getByRole('combobox',{name:'Marca',exact:true}).selectOption('Hikvision / HiLook');
   await expect(products.getByRole('listitem').first().getByRole('img')).toBeVisible();
   await products.locator('img').first().scrollIntoViewIfNeeded();
