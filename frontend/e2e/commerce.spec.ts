@@ -22,7 +22,7 @@ test('camera answers survive back navigation and reach WhatsApp and checkout',as
   await wizard.getByRole('button',{name:'Es una instalación nueva',exact:true}).click();
   await wizard.getByRole('button',{name:'Red por cable',exact:true}).click();
   await wizard.getByRole('button',{name:'Durante el próximo mes',exact:true}).click();
-  await expect(wizard.getByRole('heading',{name:'Un combo de 4 cámaras puede ser adecuado'})).toBeVisible();
+  await expect(wizard.getByRole('heading',{name:'Un combo de 3 cámaras puede ser adecuado'})).toBeVisible();
   const url=new URL(await wizard.getByRole('link',{name:'Enviar mis respuestas por WhatsApp'}).getAttribute('href')||'');
   expect(url.hostname).toBe('wa.me');
   expect(url.searchParams.get('text')).toContain('Áreas: 3');

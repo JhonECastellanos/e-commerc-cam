@@ -90,7 +90,7 @@ test('responsive administrator creates, edits, classifies and removes products w
   await page.getByLabel('Usar clasificación personalizada').check();
   await page.getByLabel('Híbrido',{exact:true}).check();await page.getByLabel('Grabadores y almacenamiento',{exact:true}).check();
   await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
-  await expect(page.getByRole('status')).toContainText('Cambios guardados');
+  await expect(page.getByRole('status').filter({hasText:'Cambios guardados'})).toBeVisible();
   expect(state.products[0].price).toBe(125000);expect((state.products[0].specs as any)['Modalidades del catalogo']).toBe('hibrido');
   await page.getByRole('button',{name:'Nuevo producto',exact:true}).click();
   await page.getByLabel('Nombre',{exact:true}).fill('Nuevo equipo QA');await page.getByRole('combobox',{name:'Marca',exact:true}).selectOption('1');
