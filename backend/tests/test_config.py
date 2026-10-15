@@ -44,7 +44,11 @@ def test_produccion_rechaza_origenes_localhost():
 
 def test_produccion_exige_webhook_secret_de_wompi():
     with pytest.raises(RuntimeError, match="WOMPPI_WEBHOOK_SECRET"):
-        make(womppi_webhook_secret="").validate_runtime_configuration()
+        make(womppi_public_key="pub_prod_configured", womppi_webhook_secret="").validate_runtime_configuration()
+
+
+def test_production_without_payment_provider_can_accept_quotes():
+    make(womppi_public_key="", womppi_private_key="", womppi_webhook_secret="").validate_runtime_configuration()
 
 
 def test_cors_origins_normaliza_barras_y_espacios():

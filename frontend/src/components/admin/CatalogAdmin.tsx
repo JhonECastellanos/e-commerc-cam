@@ -1,0 +1,122 @@
+import { useEffect, useState, type FormEvent } from 'react';
+import { api } from '../../api/client';
+import CatalogImage from '../public/CatalogImage';
+import { comboPhotos, comboTitle, productPhoto } from '../../utils/catalogPhotos';
+import { cameraFunctions, installationBranches } from '../../utils/equipmentClassification';
+import { money } from '../../utils/commercial';
+type RecordData = Record<string, any>;
+export default function CatalogAdmin({ kind }: {
+    kind: 'combos' | 'productos';
+}) {
+    const isCombo = kind === 'combos';
+    const [rows, setRows] = useState<RecordData[]>([]), [brands, setBrands] = useState<RecordData[]>([]), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('');
+    const [query, setQuery] = useState(''), [brand, setBrand] = useState(''), [page, setPage] = useState(0), [editing, setEditing] = useState<number | null>(), [form, setForm] = useState<RecordData>({}), [specs, setSpecs] = useState('{}'), [storage, setStorage] = useState('{}'), [included, setIncluded] = useState('[]');
+    async function load() { setLoading(true); try {
+        const [items, available] = await Promise.all([isCombo ? api.adminGetCombosAdmin() : api.adminGetProductsAdmin(), api.adminGetBrands()]);
+        setRows(items);
+        setBrands(available);
+    }
+    catch (e: any) {
+        setError(e.message || 'No pudimos cargar el catálogo.');
+    }
+    finally {
+        setLoading(false);
+    } }
+    useEffect(() => { void load(); }, [kind]);
+    function open(row?: RecordData) { setError(''); setNotice(''); setEditing(row?.id ?? null); setForm(row ? { ...row } : isCombo ? { name: '', brand_id: '', mode: 'cableado', resolution: '2MP', cameras_count: 4, equipment_price: 0, install_fee: null, categoria: 'Combo', instalacion_incluida: true, active: true } : { name: '', brand_id: '', category: '', price: null, instalacion_price: null, sort_order: 0, active: true }); setSpecs(JSON.stringify(row?.specs || {}, null, 2)); setStorage(JSON.stringify(row?.storage_options || {}, null, 2)); setIncluded(JSON.stringify(row?.included_items || [], null, 2)); }
+    function field(key: string, value: any) { setForm(previous => ({ ...previous, [key]: value })); }
+    async function save(event: FormEvent) {
+        event.preventDefault();
+        if (busy)
+            return;
+        setBusy(true);
+        setError('');
+        try {
+            const parsed = JSON.parse(specs), parsedStorage = JSON.parse(storage), parsedIncluded = JSON.parse(included);
+            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object')
+                throw new Error('Las especificaciones deben ser un objeto JSON.');
+            if (!parsedStorage || Array.isArray(parsedStorage) || typeof parsedStorage !== 'object' || !Array.isArray(parsedIncluded))
+                throw new Error('Revisa el objeto de almacenamiento y la lista de elementos incluidos.');
+            const keys = isCombo ? ['name', 'mode', 'resolution', 'cameras_count', 'equipment_price', 'install_fee', 'level', 'categoria', 'instalacion_incluida', 'ganancia', 'link', 'warranty_text', 'install_complexity', 'active', 'is_bestseller', 'is_budget'] : ['name', 'brand_id', 'category', 'description', 'price', 'instalacion_price', 'ganancia', 'link', 'sort_order', 'active'];
+            const data: RecordData = Object.fromEntries(keys.filter(k => form[k] !== undefined).map(k => [k, form[k]]));
+            data.specs = parsed;
+            if (isCombo) {
+                data.storage_options = parsedStorage;
+                data.included_items = parsedIncluded;
+            }
+            let id = editing;
+            if (editing === null) {
+                const params = new URLSearchParams();
+                const creationKeys = isCombo ? ['name', 'brand_id', 'mode', 'resolution', 'cameras_count', 'equipment_price', 'install_fee', 'level', 'categoria', 'instalacion_incluida', 'ganancia', 'link'] : ['name', 'brand_id', 'description', 'price', 'instalacion_price', 'category', 'ganancia', 'link', 'sort_order'];
+                creationKeys.forEach(key => { if (form[key] !== null && form[key] !== undefined && form[key] !== '')
+                    params.set(key, String(form[key])); });
+                const created = await (isCombo ? api.adminCreateCombo(params) : api.adminCreateProduct(params));
+                id = created.id;
+                setEditing(created.id);
+            }
+            if (id !== null && id !== undefined)
+                await (isCombo ? api.adminUpdateComboAdmin(id, data) : api.adminUpdateProductAdmin(id, data));
+            setEditing(undefined);
+            setNotice('Cambios guardados. El catálogo público reflejará la actualización al recargar.');
+            await load();
+        }
+        catch (e: any) {
+            setError(e.message || 'No pudimos guardar los cambios.');
+        }
+        finally {
+            setBusy(false);
+        }
+    }
+    async function remove(row: RecordData) { if (busy || !window.confirm(`¿Eliminar «${row.name || comboTitle(row as any)}»? Esta acción retira el registro del catálogo.`))
+        return; setBusy(true); setError(''); try {
+        await (isCombo ? api.adminDeleteCombo(row.id) : api.adminDeleteProduct(row.id));
+        setNotice('Registro eliminado.');
+        await load();
+    }
+    catch (e: any) {
+        setError(e.message);
+    }
+    finally {
+        setBusy(false);
+    } }
+    async function upload(row: RecordData, file?: File) { if (!file || busy)
+        return; setBusy(true); setError(''); try {
+        await (isCombo ? api.adminUploadComboImage(row.id, file) : api.adminUploadProductImage(row.id, file));
+        setNotice('Fotografía actualizada.');
+        await load();
+    }
+    catch (e: any) {
+        setError(e.message);
+    }
+    finally {
+        setBusy(false);
+    } }
+    const filtered = rows.filter(row => (!brand || String(row.brand_id) === brand) && `${row.name || ''} ${row.category || row.categoria || ''} ${row.brand_name || ''} ${row.id}`.toLowerCase().includes(query.toLowerCase()));
+    const pages = Math.max(1, Math.ceil(filtered.length / 12)), current = Math.min(page, pages - 1);
+    const text = (key: string, label: string, type = 'text', required = false) => <label htmlFor={`admin-${key}`}>{label}<input id={`admin-${key}`} type={type} value={form[key] ?? ''} required={required} min={type === 'number' ? 0 : undefined} step={type === 'number' ? 'any' : undefined} onChange={e => field(key, type === 'number' ? (e.target.value === '' ? null : Number(e.target.value)) : e.target.value)}/></label>;
+    const check = (key: string, label: string) => <label className="admin-check"><input type="checkbox" checked={Boolean(form[key])} onChange={e => field(key, e.target.checked)}/>{label}</label>;
+    const parsedSpecs = (() => { try {
+        return JSON.parse(specs) || {};
+    }
+    catch {
+        return {};
+    } })();
+    function classify(key: string, value: string, checked: boolean) { const values = String(parsedSpecs[key] || '').split(',').filter(Boolean); setSpecs(JSON.stringify({ ...parsedSpecs, [key]: (checked ? [...new Set([...values, value])] : values.filter(v => v !== value)).join(',') }, null, 2)); }
+    return <section className="admin-catalog">
+    <header className="admin-page-heading"><div><p className="admin-eyebrow">Catálogo comercial</p><h1>Administrar {isCombo ? 'Combos' : 'Productos'}</h1><p>Precios, fotografías, clasificación y disponibilidad en un solo lugar.</p></div><button className="btn btn-primary" onClick={() => open()} disabled={busy}>Nuevo {isCombo ? 'combo' : 'producto'}</button></header>
+    {error && <p className="admin-error" role="alert">{error}</p>}{notice && <p className="admin-notice" role="status">{notice}</p>}
+    {editing !== undefined && <form className="admin-editor" onSubmit={save} aria-label={editing === null ? 'Nuevo registro' : 'Editar registro'}>
+      <div className="admin-page-heading"><h2>{editing === null ? 'Crear' : 'Editar'} {isCombo ? 'combo' : 'producto'}</h2><button type="button" onClick={() => setEditing(undefined)} disabled={busy}>Cerrar editor</button></div>
+      <div className="admin-form-grid">{text('name', 'Nombre', 'text', true)}<label htmlFor="admin-brand">Marca<select id="admin-brand" value={form.brand_id ?? ''} required={isCombo} disabled={isCombo && editing !== null} onChange={e => field('brand_id', e.target.value ? Number(e.target.value) : null)}><option value="">Seleccionar marca</option>{brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label>{text(isCombo ? 'categoria' : 'category', 'Categoría')}
+        {isCombo ? <>{text('cameras_count', 'Cantidad de cámaras', 'number', true)}<label htmlFor="admin-mode">Modo de instalación<select id="admin-mode" value={form.mode} onChange={e => field('mode', e.target.value)}>{installationBranches.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>{text('resolution', 'Resolución', 'text', true)}{text('equipment_price', 'Precio de equipos (COP)', 'number', true)}{text('install_fee', 'Instalación por cámara (COP; vacío: tarifa general)', 'number')}{text('level', 'Nivel destacado (vacío: solo catálogo)')}{text('warranty_text', 'Garantía publicada')}{text('install_complexity', 'Complejidad de instalación')}</> : <>{text('price', 'Precio del equipo (COP; vacío: a cotizar)', 'number')}{text('instalacion_price', 'Instalación opcional (COP)', 'number')}{text('sort_order', 'Orden en catálogo', 'number')}<label>Descripción<textarea rows={3} value={form.description || ''} onChange={e => field('description', e.target.value)}/></label></>}
+        {text('ganancia', 'Ganancia interna (COP)', 'number')}{text('link', 'Enlace de referencia')}
+      </div><div className="admin-checks">{check('active', 'Visible en catálogo')}{isCombo && <>{check('instalacion_incluida', 'Instalación incluida')}{check('is_bestseller', 'Destacado')}{check('is_budget', 'Opción económica')}</>}</div>
+      {!isCombo && <details className="admin-details"><summary>Clasificar conexiones y funciones del equipo</summary><p>Activa solo capacidades confirmadas en la ficha del modelo. La clasificación automática sigue disponible.</p><label className="admin-check"><input type="checkbox" checked={parsedSpecs['Clasificacion manual'] === 'si'} onChange={e => setSpecs(JSON.stringify({ ...parsedSpecs, 'Clasificacion manual': e.target.checked ? 'si' : 'no' }, null, 2))}/>Usar clasificación personalizada</label><fieldset disabled={parsedSpecs['Clasificacion manual'] !== 'si'}><legend>Modalidades compatibles</legend><div className="admin-checks">{installationBranches.map(m => <label key={m.id} className="admin-check"><input type="checkbox" checked={String(parsedSpecs['Modalidades del catalogo'] || '').split(',').includes(m.id)} onChange={e => classify('Modalidades del catalogo', m.id, e.target.checked)}/>{m.name}</label>)}</div><legend>Funciones verificadas</legend><div className="admin-checks">{cameraFunctions.map(f => <label key={f.id} className="admin-check"><input type="checkbox" checked={String(parsedSpecs['Funciones del catalogo'] || '').split(',').includes(f.id)} onChange={e => classify('Funciones del catalogo', f.id, e.target.checked)}/>{f.name}</label>)}</div></fieldset></details>}
+      <details className="admin-details"><summary>Especificaciones y configuración avanzada</summary><label>Especificaciones (JSON)<textarea rows={7} value={specs} onChange={e => setSpecs(e.target.value)} spellCheck={false}/></label>{isCombo && <><label>Precios de almacenamiento (JSON)<textarea value={storage} onChange={e => setStorage(e.target.value)}/></label><label>Elementos incluidos (lista JSON)<textarea value={included} onChange={e => setIncluded(e.target.value)}/></label></>}</details>
+      <div className="admin-actions"><button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Guardando…' : editing === null ? 'Crear registro' : 'Guardar cambios'}</button><button type="button" disabled={busy} onClick={() => setEditing(undefined)}>Cancelar</button></div>
+    </form>}
+    <div className="admin-catalog-toolbar"><label>Buscar en {kind}<input type="search" value={query} placeholder="Nombre, marca, categoría o ID" onChange={e => { setQuery(e.target.value); setPage(0); }}/></label><label>Filtrar por marca<select value={brand} onChange={e => { setBrand(e.target.value); setPage(0); }}><option value="">Todas las marcas</option>{brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}</select></label><span>{filtered.length} registros</span><div className="admin-actions"><button aria-label="Página anterior del administrador" disabled={!current} onClick={() => setPage(current - 1)}>‹</button><span>{current + 1} / {pages}</span><button aria-label="Página siguiente del administrador" disabled={current >= pages - 1} onClick={() => setPage(current + 1)}>›</button></div></div>
+    {loading ? <p role="status">Cargando catálogo…</p> : <div className="admin-record-grid">{filtered.slice(current * 12, (current + 1) * 12).map(row => <article className="admin-record" key={row.id}><div className="admin-record-image"><CatalogImage src={isCombo ? comboPhotos(row as any)[0] || row.image_url : productPhoto(row as any)} alt={row.name || comboTitle(row as any)} className="w-full h-full object-contain"/></div><div className="admin-record-content"><p className="admin-eyebrow">{row.brand_name || 'Sin marca'} · #{row.id}</p><h2>{isCombo ? comboTitle(row as any) : row.name}</h2><p>{isCombo ? `${row.cameras_count} cámaras · ${row.mode}` : row.category || 'Sin categoría'}</p><strong>{money(isCombo ? row.final_price : row.price)}</strong><p>{row.active ? 'Visible en catálogo' : 'Oculto'}{isCombo ? ' · Total con instalación' : ''}</p><div className="admin-actions"><button disabled={busy} onClick={() => open(row)}>Editar</button><label className="admin-file-button">Cambiar foto<input type="file" accept="image/*" aria-label={`Cambiar foto de ${row.name || row.id}`} disabled={busy} onChange={e => { void upload(row, e.target.files?.[0]); e.target.value = ''; }}/></label><button className="admin-danger" disabled={busy} onClick={() => remove(row)}>Eliminar</button></div></div></article>)}</div>}
+    {!loading && !filtered.length && <p className="admin-empty">No hay registros para estos filtros.</p>}
+  </section>;
+}

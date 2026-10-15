@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import WhatsappCTA from '../../components/public/WhatsappCTA';
+import '../../commerce.css';
 
 export default function QuienesSomos() {
   const { t } = useTranslation();
@@ -94,15 +96,8 @@ export default function QuienesSomos() {
 
           <div className="card bg-primary-50 border-primary-100 text-center">
             <h3 className="font-bold text-gray-900 mb-2">¿No encuentras lo que buscas?</h3>
-            <p className="text-gray-600 mb-4">Escríbenos directo por WhatsApp y te responderemos en minutos.</p>
-            <a
-              href={`https://wa.me/${settings.whatsapp_number || '[COMPLETAR]'}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-block"
-            >
-              {t('home.faq_more')}
-            </a>
+            <p className="text-gray-600 mb-4">Escríbenos por WhatsApp para revisar tu solicitud con un asesor.</p>
+            <WhatsappCTA message="Hola, tengo una consulta sobre cámaras e instalación.">{t('home.faq_more')}</WhatsappCTA>
           </div>
         </div>
       </section>

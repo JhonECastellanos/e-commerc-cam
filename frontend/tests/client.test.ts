@@ -92,3 +92,12 @@ describe('cliente HTTP', () => {
     expect(JSON.parse(options.body)).toEqual({ email: 'admin@test.com', password: 'clave' });
   });
 });
+
+it('sends creation parameters in the query expected by the existing admin API',async()=>{
+ const fetchMock=mockFetch({id:1});
+ await api.adminCreateCombo(new URLSearchParams({name:'Combo 4 cámaras',brand_id:'1'}));
+ expect(new URL(fetchMock.mock.calls[0][0],'http://local').searchParams.get('name')).toBe('Combo 4 cámaras');
+ expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+ await api.adminCreateProduct(new URLSearchParams({name:'Equipo real',brand_id:'1'}));
+ expect(fetchMock.mock.calls[1][0]).toContain('/admin/products-admin?');
+});

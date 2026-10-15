@@ -1,67 +1,24 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import Autoplay from 'embla-carousel-autoplay';
 import ComboCard from './ComboCard';
-
-interface CarruselCombosProps {
-  combos: any[];
-}
-
-export default function CarruselCombos({ combos }: CarruselCombosProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, align: 'start', breakpoints: { '(min-width: 768px)': { slidesToScroll: 2 } } },
-    [Autoplay({ delay: 4000, stopOnInteraction: false })]
-  );
-  const [canScrollPrev, setCanScrollPrev] = useState(false);
-  const [canScrollNext, setCanScrollNext] = useState(false);
-
-  const updateButtons = useCallback(() => {
-    if (!emblaApi) return;
-    setCanScrollPrev(emblaApi.canScrollPrev());
-    setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    emblaApi.on('select', updateButtons);
-    emblaApi.on('init', updateButtons);
-  }, [emblaApi, updateButtons]);
-
-  if (combos.length === 0) return null;
-
-  return (
-    <div className="relative">
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          {combos.map((combo) => (
-            <div key={combo.id} className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_25%] pl-4">
-              <ComboCard combo={combo} />
-            </div>
-          ))}
-        </div>
-      </div>
-      <button
-        onClick={() => emblaApi?.scrollPrev()}
-        className={`absolute -left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-600 hover:text-primary-500 transition-colors ${
-          !canScrollPrev ? 'opacity-30 cursor-not-allowed' : ''
-        }`}
-        disabled={!canScrollPrev}
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <button
-        onClick={() => emblaApi?.scrollNext()}
-        className={`absolute -right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center text-gray-600 hover:text-primary-500 transition-colors ${
-          !canScrollNext ? 'opacity-30 cursor-not-allowed' : ''
-        }`}
-        disabled={!canScrollNext}
-      >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
-  );
+import type { Combo } from '../../utils/commercial';
+export default function CarruselCombos({ combos }: {
+    combos: Combo[];
+}) {
+    const [ref, api] = useEmblaCarousel({ align: 'start', slidesToScroll: 1, breakpoints: { '(min-width: 900px)': { slidesToScroll: 3 } } });
+    const [index, setIndex] = useState(0), [count, setCount] = useState(1), [brand, setBrand] = useState('');
+    useEffect(() => {
+        if (!api)
+            return;
+        const update = () => { setIndex(api.selectedScrollSnap()); setCount(api.scrollSnapList().length); setBrand(combos[api.slidesInView()[0] ?? 0]?.brand_name || ''); };
+        update();
+        api.on('select', update).on('reInit', update).on('slidesInView', update);
+        return () => { api.off('select', update).off('reInit', update).off('slidesInView', update); };
+    }, [api, combos]);
+    if (!combos.length)
+        return null;
+    return <div className="featured-carousel" role="region" aria-label="Combos destacados por marca" aria-roledescription="carrusel">
+    <div className="featured-carousel-controls"><p aria-live="polite">{brand}</p><div><button type="button" aria-label="Combos anteriores" onClick={() => api?.scrollPrev()} disabled={!api?.canScrollPrev()}>‹</button><span>{index + 1} / {count}</span><button type="button" aria-label="Siguientes combos" onClick={() => api?.scrollNext()} disabled={!api?.canScrollNext()}>›</button></div></div>
+    <div className="overflow-hidden" ref={ref}><div className="featured-carousel-track" role="list">{combos.map(combo => <div className="featured-carousel-slide" key={combo.id}><ComboCard combo={combo}/></div>)}</div></div>
+  </div>;
 }

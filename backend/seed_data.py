@@ -134,6 +134,7 @@ SPECS_BY_RESOLUTION = {
 }
 
 SETTINGS_DEFAULT = {
+    "advisory_retention_days": ("[DEFINIR]", "Plazo de conservación de solicitudes de asesoría; confirmar con la política del responsable"),
     "install_fee_per_camera": ("75000", "Valor en COP por cámara instalada (mano de obra) — cableado, híbrido, solar"),
     "install_fee_per_camera_wireless": ("50000", "Valor en COP por cámara inalámbrica instalada (mano de obra)"),
     "vat_rate": ("19", "Porcentaje de IVA aplicable"),
@@ -244,7 +245,6 @@ async def seed_all():
             {"unique_code": "IC-DAH-003", "name": "4cam_2mp_dvr_8chanels_1tb_app_v2", "brand_slug": "dahua-cooper", "mode": "cableado", "resolution": "2MP", "cameras_count": 4, "equipment_price": 769000, "install_fee": 90000, "categoria": "Combo", "instalacion_incluida": True},
             {"unique_code": "IC-DAH-004", "name": "3cam_2mp_dvr_4chanels_500gb_app", "brand_slug": "dahua-cooper", "mode": "cableado", "resolution": "2MP", "cameras_count": 3, "equipment_price": 549000, "install_fee": 90000, "categoria": "Combo", "instalacion_incluida": True},
             {"unique_code": "IC-DAH-005", "name": "6cam_2mp_dvr_8chanels_500gb_app", "brand_slug": "dahua-cooper", "mode": "cableado", "resolution": "2MP", "cameras_count": 6, "equipment_price": 849000, "install_fee": 80000, "categoria": "Combo", "instalacion_incluida": True},
-            {"unique_code": "IC-DAH-006", "name": "13cam_2mp_dvr_16chanels_2tb_app", "brand_slug": "dahua-cooper", "mode": "cableado", "resolution": "2MP", "cameras_count": 13, "equipment_price": 1899900, "install_fee": 70000, "categoria": "Combo", "instalacion_incluida": True},
             {"unique_code": "IC-HIK-010", "name": "10cam_2mp_dvr_16chanels_2tb_app", "brand_slug": "hikvision-hilook", "mode": "cableado", "resolution": "2MP", "cameras_count": 10, "equipment_price": 1598000, "install_fee": 70000, "categoria": "Combo", "instalacion_incluida": True},
         ]
         for fc in fixed_combos:

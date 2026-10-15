@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api, randomId } from '../../api/client';
+import { cameraSummary, readCameraProfile } from '../../utils/cameraRecommendation';
+import { useCommercialContact } from '../../hooks/useCommercialContact';
+import { whatsappURL } from '../../utils/whatsapp';
+import WhatsappCTA from '../../components/public/WhatsappCTA';
+import '../../commerce.css';
 
 export default function Checkout() {
   const { comboId } = useParams();
@@ -18,6 +23,8 @@ export default function Checkout() {
   const [coverageAreas, setCoverageAreas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentsEnabled,setPaymentsEnabled]=useState(false);
+  useEffect(()=>{api.getPublicSettings().then(data=>setPaymentsEnabled(Boolean(data.payments_enabled))).catch(()=>{})},[]);
 
   const [form, setForm] = useState({
     customer_name: '',
@@ -30,13 +37,10 @@ export default function Checkout() {
   });
   const [error, setError] = useState('');
   const [loadError, setLoadError] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const whatsappNumber = useCommercialContact();
+  const [cameraProfile] = useState(()=>{try{return readCameraProfile(location.state?.cameraAnswers,sessionStorage.getItem('instalacam:cctv-profile'));}catch{return readCameraProfile(location.state?.cameraAnswers,null);}});
   const errorRef = useRef<HTMLDivElement | null>(null);
   const idempotencyKey = useRef(randomId());
-
-  useEffect(() => {
-    api.getPublicSettings().then(s => setWhatsappNumber(s.whatsapp_number || '')).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if ((error || loadError) && errorRef.current) errorRef.current.focus();
@@ -251,7 +255,7 @@ export default function Checkout() {
                   </select>
                   {whatsappNumber && (
                     <a
-                      href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hola, mi municipio no aparece en la cobertura. ¿Pueden ayudarme?')}`}
+                      href={whatsappURL(whatsappNumber,'Hola, mi municipio no aparece en la cobertura. ¿Pueden ayudarme?')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs text-primary-500 hover:text-primary-600 mt-1 inline-block"
@@ -290,13 +294,14 @@ export default function Checkout() {
                 disabled={submitting}
                 className="btn-primary w-full"
               >
-                {submitting ? t('common.loading') : t('checkout.pay_deposit')}
+                {submitting ? t('common.loading') : paymentsEnabled?t('checkout.pay_deposit'):'Enviar solicitud de reserva'}
               </button>
             </div>
           </form>
         </div>
 
         <div className="md:col-span-2 space-y-6">
+          {cameraProfile&&<section className="card commerce-surface" aria-label="Perfil de cámaras para la cotización"><h2 className="font-bold mb-3">Tus respuestas para la instalación</h2><p className="whitespace-pre-line text-sm text-gray-600">{cameraSummary(cameraProfile)}</p><p className="text-sm text-gray-600 my-4">Recomendación preliminar. Envíala al asesor para confirmar el alcance antes de reservar.</p><WhatsappCTA message={`Hola, quiero revisar mi instalación antes de reservar.\n${cameraSummary(cameraProfile)}\nCombo: ${isCustom?'personalizado':comboId}.`}>Compartir perfil por WhatsApp</WhatsappCTA></section>}
           <div className="card">
             <h3 className="font-bold text-gray-900 mb-4">{t('checkout.order_summary')}</h3>
             <div className="bg-gray-50 rounded-lg p-4 space-y-2">

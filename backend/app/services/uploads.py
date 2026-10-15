@@ -30,11 +30,11 @@ async def _validate_image(file: UploadFile) -> tuple[bytes, str]:
         raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Solo se permiten imágenes JPG, PNG o WebP")
     data = await file.read(settings.max_upload_bytes + 1)
     if not data or len(data) > settings.max_upload_bytes:
-        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail="La imagen supera el tamaño permitido")
+        raise HTTPException(status_code=413, detail="La imagen supera el tamaño permitido")
     if not any(data.startswith(signature) for signature in MAGIC_BYTES[content_type]):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El contenido del archivo no coincide con una imagen válida")
+        raise HTTPException(status_code=422, detail="El contenido del archivo no coincide con una imagen válida")
     if content_type == "image/webp" and data[8:12] != b"WEBP":
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El contenido WebP no es válido")
+        raise HTTPException(status_code=422, detail="El contenido WebP no es válido")
     return data, ALLOWED_IMAGE_TYPES[content_type][0]
 
 
@@ -80,3 +80,21 @@ async def save_image_upload(file: UploadFile, directory: Path, prefix: str) -> s
     filename = f"{prefix}_{uuid4().hex}{suffix}"
     (directory / filename).write_bytes(data)
     return filename
+
+
+async def store_banner_video(file: UploadFile, banner_id: int) -> str:
+    if file.content_type != "video/mp4" or not (file.filename or "").lower().endswith(".mp4"):
+        raise HTTPException(415, "Usa vídeo MP4 con códec H.264, sin enlaces ni archivos ejecutables")
+    data = await file.read(settings.max_video_upload_bytes + 1)
+    if len(data) > settings.max_video_upload_bytes:
+        raise HTTPException(413, "El vídeo supera el límite de 30 MB")
+    if len(data) < 24 or data[4:8] != b"ftyp":
+        raise HTTPException(422, "El archivo no contiene un MP4 válido")
+    filename = f"banner_{banner_id}_{uuid4().hex}.mp4"
+    subpath = f"banners/videos/{filename}"
+    if settings.supabase_url and settings.supabase_service_key:
+        return await _upload_to_supabase(data, "video/mp4", subpath)
+    destination = uploads_root() / subpath
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(data)
+    return f"/api/uploads/{subpath}"

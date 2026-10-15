@@ -8,7 +8,7 @@ from app.models.user import User
 from app.routers.admin_auth import get_current_user
 from pydantic import BaseModel
 from typing import Optional
-from app.services.uploads import store_public_image
+from app.services.uploads import store_public_image, store_banner_video
 
 UPLOAD_BASE = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
 
@@ -116,6 +116,16 @@ async def upload_banner_image(
     banner.image_url = await store_public_image(file, "banners", f"banner_{banner.id}")
     await db.commit()
     return {"image_url": banner.image_url}
+
+
+@router.post("/banners/{banner_id}/upload-video")
+async def upload_banner_video(banner_id: int, file: UploadFile = File(...), db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
+    banner = await db.get(Banner, banner_id)
+    if not banner:
+        raise HTTPException(404, "Banner no encontrado")
+    banner.video_url = await store_banner_video(file, banner_id)
+    await db.commit()
+    return {"video_url": banner.video_url}
 
 @router.delete("/banners/{banner_id}")
 async def delete_banner(

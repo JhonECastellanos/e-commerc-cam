@@ -1,17 +1,40 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const apiTarget = process.env.VITE_API_PROXY || 'http://localhost:8000';
-
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+ const env = loadEnv(mode, '.', 'VITE_');
+ const apiTarget = env.VITE_API_PROXY_TARGET || env.VITE_API_PROXY || 'http://localhost:8000';
+ return {
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('/node_modules/')) return;
+          if (id.includes('/framer-motion/') || id.includes('/motion-dom/') || id.includes('/motion-utils/')) return 'motion';
+          if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-router/') || id.includes('/react-router-dom/')) return 'react';
+          if (id.includes('/i18next/') || id.includes('/react-i18next/') || id.includes('/i18next-browser-languagedetector/')) return 'languages';
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: apiTarget,
         changeOrigin: true,
+        configure(proxy) {
+          proxy.on('proxyRes', (response, request) => {
+            if (/^\/api\/uploads\/.+\.webp(?:\?|$)/i.test(request.url || '') &&
+                response.headers['content-type'] === 'application/octet-stream') {
+              response.headers['content-type'] = 'image/webp';
+            }
+          });
+        },
       },
     },
   },
+ };
 })

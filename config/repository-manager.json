@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "name": "instalacam",
+      "development": {
+        "repository": "JhonECastellanos/e-commerc-cam",
+        "branch": "desarrollo"
+      },
+      "production": {
+        "repository": "JhonECastellanos/e-commerc-cam",
+        "branch": "master"
+      },
+      "required_visibility": "public",
+      "permissions": {
+        "issues": "automatic",
+        "commits": "automatic",
+        "pull_requests": "automatic",
+        "reviews": "automatic",
+        "merge": "owner_approval",
+        "deploy": "owner_approval",
+        "direct_production_push": false,
+        "force_push": false
+      }
+    }
+  ]
+}

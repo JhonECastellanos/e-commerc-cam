@@ -12,6 +12,7 @@ export default function PaymentConfirm() {
   const [status, setStatus] = useState<'pending' | 'success' | 'error'>('pending');
   const [pdfError, setPdfError] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [paymentsEnabled,setPaymentsEnabled]=useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const orderAccessToken = reference ? sessionStorage.getItem(`order_access_${reference}`) : null;
 
@@ -19,7 +20,7 @@ export default function PaymentConfirm() {
     whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}` : '';
 
   useEffect(() => {
-    api.getPublicSettings().then(s => setWhatsappNumber(s.whatsapp_number || '')).catch(() => {});
+    api.getPublicSettings().then(s => {setWhatsappNumber(s.whatsapp_number || '');setPaymentsEnabled(Boolean(s.payments_enabled))}).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -140,8 +141,8 @@ export default function PaymentConfirm() {
       {status === 'pending' && (
         <>
           <div className="text-6xl mb-6 animate-pulse">⏳</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('payment.pending')}</h1>
-          <p className="text-gray-600 mb-6">{t('payment.pending_msg')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">{paymentsEnabled?t('payment.pending'):'Solicitud recibida'}</h1>
+          <p className="text-gray-600 mb-6">{paymentsEnabled?t('payment.pending_msg'):'Un asesor revisará el alcance y coordinará contigo el pago y la instalación. Esta solicitud no acredita un pago ni reserva una fecha de instalación.'}</p>
           {whatsappNumber && (
             <a
               href={waHref(`Hola, mi orden ${reference} está pendiente de pago.`)}

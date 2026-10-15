@@ -17,6 +17,7 @@ WEBHOOK_SECRET = "test_events_secret"
 @pytest.fixture(autouse=True)
 def wompi_secret(monkeypatch):
     monkeypatch.setattr(settings, "womppi_webhook_secret", WEBHOOK_SECRET)
+    monkeypatch.setattr(settings, "womppi_public_key", "pub_test_synthetic")
 
 
 def idem_key() -> str:

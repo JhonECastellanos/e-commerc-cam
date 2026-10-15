@@ -4,6 +4,8 @@ import { api } from '../../api/client';
 
 export default function Prices() {
   const { t } = useTranslation();
+  const [error,setError]=useState('');
+  const [query,setQuery]=useState('');
   const [tab, setTab] = useState<'combos' | 'settings' | 'audit'>('combos');
   const [combos, setCombos] = useState<any[]>([]);
   const [settings, setSettings] = useState<any[]>([]);
@@ -26,7 +28,7 @@ export default function Prices() {
         setSettings(s);
         setChangelog(l);
       })
-      .catch(console.error)
+      .catch((err:any)=>setError(err.message))
       .finally(() => setLoading(false));
   };
 
@@ -40,7 +42,7 @@ export default function Prices() {
       setEditingId(null);
       loadData();
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     }
   };
 
@@ -50,7 +52,7 @@ export default function Prices() {
       await api.adminUpdateCombo(id, { [field]: value });
       loadData();
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setSavingSpec(false);
     }
@@ -61,7 +63,7 @@ export default function Prices() {
       await api.adminUpdateSetting(key, value);
       loadData();
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
     }
   };
 
@@ -107,6 +109,8 @@ export default function Prices() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">{t('admin.prices')}</h1>
+      {error&&<p role="alert" className="admin-error">{error}</p>}
+      {tab==='combos'&&<label className="block">Buscar combo por marca, modo o ID<input className="block w-full mt-2" type="search" value={query} onChange={e=>setQuery(e.target.value)}/></label>}
 
       <div className="flex space-x-2 border-b">
         {(['combos', 'settings', 'audit'] as const).map((tabName) => (
@@ -144,7 +148,7 @@ export default function Prices() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {combos.map((c) => (
+              {combos.filter(c=>`${c.brand_name} ${c.mode} ${c.id}`.toLowerCase().includes(query.toLowerCase())).map((c) => (
                 <Fragment key={c.id}>
                   <tr className="hover:bg-gray-50">
                     {editingId === c.id ? (

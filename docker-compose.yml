@@ -1,3 +1,5 @@
+name: e-commerc-cam
+
 services:
   db:
     image: postgres:15-alpine
@@ -16,12 +18,21 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   backend:
+    image: e-commerc-cam-backend
     build: ./backend
-    env_file: .env
+    env_file:
+      - path: .env
+        required: true
+      - path: .env.cloudflare
+        required: false
+      - path: .env.whatsapp
+        required: false
+      - path: .env.production-local
+        required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-instalacam}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-instalacam}
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     volumes:
       - uploads_data:/app/uploads
       - private_agreements:/app/private_agreements
@@ -36,19 +47,68 @@ services:
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
 
+  whatsapp:
+    image: e-commerc-cam-whatsapp
+    build: ./services/whatsapp
+    env_file:
+      - path: .env.whatsapp
+        required: false
+    environment:
+      BACKEND_URL: http://backend:8000
+    volumes:
+      - whatsapp_session:/data
+    shm_size: 256mb
+    init: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3210/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+
   frontend:
+    image: e-commerc-cam-frontend
     build: ./frontend
     ports:
-      - "${HTTP_PORT:-80}:8080"
+      - "${HTTP_BIND_IP:-127.0.0.1}:${HTTP_PORT:-80}:8080"
     environment:
       VITE_API_PROXY: "${VITE_API_PROXY:-http://backend:8000}"
     depends_on:
       backend:
         condition: service_healthy
+    networks: [default, cloudflare]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
 
+  cloudflared:
+    image: cloudflare/cloudflared@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c
+    profiles: [cloudflare]
+    command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://frontend:8080"]
+    depends_on:
+      frontend:
+        condition: service_healthy
+    networks: [cloudflare]
+    restart: unless-stopped
+    read_only: true
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  cloudflare:
+
 volumes:
+  whatsapp_session:
   pgdata:
+    name: ${PLATFORM_PG_VOLUME:-e-commerc-cam_plataforma_pgdata}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}
   uploads_data:
+    name: ${PLATFORM_UPLOADS_VOLUME:-e-commerc-cam_plataforma_uploads}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}
   private_agreements:
+    name: ${PLATFORM_AGREEMENTS_VOLUME:-e-commerc-cam_plataforma_agreements}
+    external: ${PLATFORM_VOLUMES_EXTERNAL:-false}

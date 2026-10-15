@@ -19,4 +19,13 @@ backup_*.sql
 .idea/
 docker-compose.override.yml
 *.tsbuildinfo
+assets-recovery/
+backend/uploads/
+backend/private_agreements/
+test-results/
+frontend/test-results/
+frontend/playwright-report/
+*-audit.json
+!docs/catalog-asset-audit.json
 .npm-cache/
+.local/

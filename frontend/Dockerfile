@@ -1,4 +1,4 @@
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -18,7 +18,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup \
     && sed -i 's/listen       80;/listen       8080;/' /etc/nginx/conf.d/default.conf \
     && sed -i 's|^pid .*;|pid /tmp/nginx.pid;|' /etc/nginx/nginx.conf \
-    && chown -R appuser:appgroup /var/cache/nginx /usr/share/nginx/html
+    && chown -R appuser:appgroup /var/cache/nginx
+# The static bundle is world-readable; nginx only needs write access to its cache.
 USER appuser
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

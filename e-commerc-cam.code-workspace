@@ -1,0 +1,4 @@
+{
+  "folders": [{ "name": "e-commerc-cam", "path": "." }, { "name": "CATALOGO (originales)", "path": "../CATALOGO" }],
+  "settings": { "files.exclude": { "**/node_modules": true, "**/.venv": true, "**/dist": true, "**/test-results": true }, "python.defaultInterpreterPath": "${workspaceFolder:e-commerc-cam}/.venv/Scripts/python.exe" }
+}

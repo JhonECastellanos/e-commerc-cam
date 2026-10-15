@@ -11,6 +11,8 @@ def generar_signature(transaction_id: str, status: str, amount_cents: int, times
     return hashlib.sha256(raw.encode()).hexdigest()
 
 def verificar_webhook(payload: dict) -> bool:
+    if not settings.womppi_webhook_secret:
+        return False
     try:
         data = payload.get("data", {})
         transaction = data.get("transaction", data)
@@ -28,7 +30,9 @@ def verificar_webhook(payload: dict) -> bool:
 def format_amount_cop(amount: Decimal) -> int:
     return int(amount * 100)
 
-def get_wompi_widget_url(public_key: str, amount_cents: int, reference: str, redirect_url: str) -> str:
+def get_wompi_widget_url(public_key: str, amount_cents: int, reference: str, redirect_url: str) -> str | None:
+    if not public_key:
+        return None
     # redirect_url already carries its own query string, so it must be percent-encoded
     # before being embedded as a query parameter value.
     return (
