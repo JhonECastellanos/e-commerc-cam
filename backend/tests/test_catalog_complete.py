@@ -30,8 +30,11 @@ async def test_admin_crud_prices_classification_and_visibility_in_isolated_datab
     product = await client.post("/api/admin/products-admin", headers=headers, params={"name": "Equipo QA aislado", "brand_id": seed["brand_id"], "category": "Grabadores", "price": 500000})
     assert product.status_code == 200
     product_id = product.json()["id"]
+    uploaded = await client.post(f"/api/admin/products-admin/{product_id}/upload-image", headers=headers, files={"file": ("real.png", b"\x89PNG\r\n\x1a\n" + b"image-fixture", "image/png")})
+    assert uploaded.status_code == 200
+    assert (await client.put("/api/admin/prices/settings/show_product_prices", headers=headers, json={"value": "true"})).status_code == 200
     specs = {"Clasificacion manual": "si", "Modalidades del catalogo": "cableado,hibrido", "Funciones del catalogo": "recorder,motion"}
-    updated = await client.put(f"/api/admin/products-admin/{product_id}", headers=headers, json={"price": 600000, "category": "Grabadores inteligentes", "specs": specs})
+    updated = await client.put(f"/api/admin/products-admin/{product_id}", headers=headers, json={"price": 600000, "category": "Grabadores inteligentes", "specs": specs, "active": True})
     assert updated.status_code == 200
     public = (await client.get("/api/products")).json()
     assert public[0]["category"] == "Grabadores inteligentes"

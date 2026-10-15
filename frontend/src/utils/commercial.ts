@@ -25,7 +25,7 @@ export type Product = {
   price?: number | null;
   instalacion_price?: number | null;
   image_url?: string | null;
-  specs?: Record<string, string>;
+  specs?: Record<string, any>;
   active?: boolean;
 };
 export const modeLabels: Record<string, string> = { cableado: 'Cableado', inalambrico: 'Inalámbrico', hibrido: 'Híbrido', solar: 'Solar', poe: 'PoE' };

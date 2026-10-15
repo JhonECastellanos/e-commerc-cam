@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import CatalogImage from '../../components/public/CatalogImage';
 import WhatsappCTA from '../../components/public/WhatsappCTA';
 import '../../commerce.css';
 
@@ -51,11 +52,13 @@ export default function QuienesSomos() {
       <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">{t('about.title')}</h1>
-          <div className="prose prose-gray max-w-none text-center">
+          <div className="grid gap-8 items-center md:grid-cols-2">
+          <figure><CatalogImage src={settings.about_image_url || "/images/tecnico-default.svg"} alt="Equipo técnico de InstalaCámara" className="w-full aspect-[4/3] object-cover rounded-2xl"/><figcaption className="text-sm text-gray-600 mt-3">Asesoría e instalación para tu proyecto de seguridad.</figcaption></figure>
+          <div className="prose prose-gray max-w-none">
             <p className="text-lg text-gray-600 leading-relaxed">
               {t('about.desc_1')}
             </p>
-          </div>
+          </div></div>
         </div>
       </section>
 
