@@ -79,11 +79,12 @@ if ($LASTEXITCODE -ne 0) { throw 'El filtro de privacidad no pasó. Funnel perma
 Write-ProjectFile $taskConfig ([IO.File]::ReadAllText((Join-Path $taskRoot 'infra/tailscale/serve.example.json')))
 Invoke-ProjectDocker ($taskCompose + @('restart', 'tailscale')) | Write-Output
 $taskReady = $false
-for ($taskAttempt = 0; $taskAttempt -lt 90; $taskAttempt++) {
+$taskDeadline = [DateTime]::UtcNow.AddMinutes(12)
+while ([DateTime]::UtcNow -lt $taskDeadline) {
     try {
         $taskResponse = Invoke-WebRequest -Uri ($taskUrl + '/api/health/ready') -UseBasicParsing -TimeoutSec 5
         if ($taskResponse.StatusCode -eq 200 -and ($taskResponse.Content | ConvertFrom-Json).status -eq 'ok') { $taskReady = $true; break }
-    } catch { Start-Sleep -Seconds 2 }
+    } catch { Start-Sleep -Seconds 5 }
 }
 if (-not $taskReady) {
     Write-ProjectFile $taskConfig "{}`n"
