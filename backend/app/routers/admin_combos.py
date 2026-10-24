@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from typing import Optional
 from decimal import Decimal
 from app.services.uploads import store_public_image
+from app.services.catalog_visibility import gallery, photograph
 
 router = APIRouter()
 
@@ -70,7 +71,7 @@ class ComboAdminUpdate(BaseModel):
 @router.get("/combos-admin", response_model=list[ComboAdminOut])
 async def get_combos_admin(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     result = await db.execute(
-        select(Combo).options(joinedload(Combo.brand)).order_by(Combo.id)
+        select(Combo).options(joinedload(Combo.brand)).where(Combo.name.isnot(None)).order_by(Combo.id)
     )
     combos = result.unique().scalars().all()
     fee_settings = (await db.execute(select(Setting).where(Setting.key.in_(["install_fee_per_camera", "install_fee_per_camera_wireless"])))).scalars().all()
@@ -86,7 +87,7 @@ async def get_combos_admin(db: AsyncSession = Depends(get_db), user: User = Depe
             name=c.name, mode=c.mode, resolution=c.resolution, cameras_count=c.cameras_count,
             equipment_price=c.equipment_price, install_fee=c.install_fee, final_price=final_price,
             is_bestseller=c.is_bestseller, is_budget=c.is_budget, level=c.level,
-            warranty_text=c.warranty_text, image_url=c.image_url, active=c.active,
+            warranty_text=c.warranty_text, image_url=gallery(c)[0] if gallery(c) else None, active=c.active,
             specs=c.specs, storage_options=c.storage_options, install_complexity=c.install_complexity,
             included_items=c.included_items, categoria=c.categoria,
             instalacion_incluida=c.instalacion_incluida if hasattr(c, 'instalacion_incluida') else True,
@@ -104,11 +105,20 @@ async def update_combo_admin(
     c = result.unique().scalar_one_or_none()
     if not c:
         raise HTTPException(status_code=404, detail="Combo no encontrado")
+    if data.specs is not None and "catalog_images" in data.specs:
+        images = data.specs["catalog_images"]
+        if not isinstance(images, list) or len(images) > 20 or any(not photograph(url) for url in images):
+            raise HTTPException(422, "La galería admite hasta 20 fotografías")
     for field, value in data.model_dump(exclude_unset=True).items():
         old = getattr(c, field)
         if old != value:
             await log_change(db, user.id, "combo", combo_id, field, old, value)
             setattr(c, field, value)
+    if not gallery(c):
+        if data.active is True:
+            raise HTTPException(422, "Añade una fotografía real antes de publicar el combo")
+        c.active = False
+        c.image_url = None
     await db.commit()
     await db.refresh(c)
     fee = await get_install_fee(db, c.mode, c)
@@ -137,7 +147,9 @@ async def upload_combo_image(
     if not c:
         raise HTTPException(status_code=404, detail="Combo no encontrado")
     brand_slug = c.brand.slug if c.brand else "unknown"
+    previous = gallery(c)
     c.image_url = await store_public_image(file, f"catalog/{brand_slug}/combos", f"combo_{combo_id}")
+    c.specs = {**(c.specs or {}), "catalog_images": list(dict.fromkeys([c.image_url, *previous]))}
     await db.commit()
     return {"image_url": c.image_url}
 
@@ -159,7 +171,7 @@ async def create_combo_admin(
     user: User = Depends(get_current_user),
 ):
     combo = Combo(
-        name=name, brand_id=brand_id, mode=mode, resolution=resolution,
+        name=name, brand_id=brand_id, mode=mode, resolution=resolution, active=False,
         cameras_count=cameras_count, equipment_price=equipment_price,
         install_fee=install_fee, level=level, categoria=categoria,
         instalacion_incluida=instalacion_incluida, ganancia=ganancia, link=link,

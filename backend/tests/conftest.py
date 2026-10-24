@@ -63,11 +63,13 @@ async def seed(session_maker):
         combo_wired = Combo(
             brand_id=brand.id, mode="cableado", resolution="2MP", cameras_count=4,
             equipment_price=Decimal("1000000"), level="basico", active=True,
+            name="Combo cableado de prueba", image_url="/api/uploads/fixtures/wired.webp",
             warranty_text="1 año", storage_options={"1TB": 150000}, specs={}, included_items=[],
         )
         combo_wireless = Combo(
             brand_id=brand.id, mode="inalambrico", resolution="3MP", cameras_count=2,
             equipment_price=Decimal("800000"), level="medio", active=True,
+            name="Combo inalámbrico de prueba", image_url="/api/uploads/fixtures/wireless.webp",
             warranty_text="1 año", storage_options={}, specs={}, included_items=[],
         )
         combo_inactive = Combo(
@@ -106,6 +108,8 @@ async def client(engine, session_maker, monkeypatch, tmp_path):
         pdf.write_bytes(b"%PDF-1.4 fake")
         return str(pdf)
 
+    from app.config import settings
+    monkeypatch.setattr(settings, "uploads_dir", str(tmp_path / "uploads"))
     monkeypatch.setattr("app.routers.orders.generar_acuerdo_reserva", fake_pdf)
     app.dependency_overrides[get_db] = override_get_db
     rate_limiter._events.clear()

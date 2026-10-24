@@ -175,6 +175,9 @@ export const api = {
     return uploadForm<any>(`/api/admin/products-admin/${id}/upload-image`, formData);
   },
 
+  adminGetDemoMedia: () => request<Record<string, {image_url:string;video_url:string}>>('/admin/media/demos'),
+  adminUpdateDemoMedia: (id:string, data:{image_url:string;video_url:string}) => request<any>(`/admin/media/demos/${id}`, {method:'PUT', body:JSON.stringify(data)}),
+  adminUploadDemoMedia: (id:string, kind:'image'|'video', file:File) => {const data=new FormData();data.append('file',file);return uploadForm<any>(`/api/admin/media/demos/${id}/${kind}`,data);},
   adminGetBanners: () => request<any[]>('/admin/banners'),
   adminCreateBanner: (data: { title: string; subtitle?: string; video_url?: string; link_url?: string; position: number }) =>
     request<any>('/admin/banners', { method: 'POST', body: JSON.stringify(data) }),

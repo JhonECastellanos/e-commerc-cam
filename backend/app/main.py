@@ -68,7 +68,7 @@ async def request_context(request: Request, call_next):
     started = time.perf_counter()
     try:
         content_length = request.headers.get("content-length")
-        maximum = settings.max_video_upload_bytes + 65536 if request.url.path.endswith('/upload-video') else settings.max_upload_bytes if "/upload" in request.url.path else settings.max_request_body_bytes
+        maximum = settings.max_video_upload_bytes + 65536 if (request.url.path.endswith('/upload-video') or (request.url.path.startswith('/api/admin/media/demos/') and request.url.path.endswith('/video'))) else settings.max_upload_bytes + 65536 if ("/upload" in request.url.path or (request.url.path.startswith("/api/admin/media/demos/") and request.url.path.endswith("/image"))) else settings.max_request_body_bytes
         if content_length and int(content_length) > maximum:
             return JSONResponse(status_code=413, content={"detail": "Solicitud demasiado grande", "request_id": request_id})
         response = await call_next(request)
@@ -145,7 +145,7 @@ async def readiness() -> dict[str, str]:
     return {"status": "ok"}
 
 
-from app.routers import admin_auth, admin_banners, admin_combos, admin_coverage, admin_dashboard, admin_notifications, admin_orders, admin_prices, admin_products, admin_social, orders, public, whatsapp, ws  # noqa: E402
+from app.routers import admin_media, admin_auth, admin_banners, admin_combos, admin_coverage, admin_dashboard, admin_notifications, admin_orders, admin_prices, admin_products, admin_social, orders, public, whatsapp, ws  # noqa: E402
 
 app.include_router(public.router, prefix="/api", tags=["Público"])
 app.include_router(orders.router, prefix="/api", tags=["Órdenes"])
@@ -156,6 +156,7 @@ app.include_router(admin_dashboard.router, prefix="/api/admin", tags=["Admin Das
 app.include_router(admin_notifications.router, prefix="/api/admin", tags=["Admin Notificaciones"])
 app.include_router(admin_social.router, prefix="/api/admin", tags=["Admin Redes Sociales"])
 app.include_router(admin_coverage.router, prefix="/api/admin", tags=["Admin Cobertura"])
+app.include_router(admin_media.router, prefix="/api/admin", tags=["Admin Multimedia"])
 app.include_router(admin_banners.router, prefix="/api/admin", tags=["Admin Banners"])
 app.include_router(admin_products.router, prefix="/api/admin", tags=["Admin Productos"])
 app.include_router(admin_combos.router, prefix="/api/admin", tags=["Admin Combos"])
