@@ -1,0 +1,74 @@
+{
+  "dahua-cooper": {
+    "3cam2mpdvr4chanels500gbapp": [
+      "/catalogo/8f5ef9669d158f2398d0.webp",
+      "/catalogo/3b36ea11d5c4207a9772.webp",
+      "/catalogo/6bdfdfdbf242912fb066.webp",
+      "/catalogo/b3fae77e0e13432d13c4.webp",
+      "/catalogo/f73e89e79d4e1f1cf6c4.webp",
+      "/catalogo/1bd6e0dfac94881f7a95.webp"
+    ],
+    "4cam2mpdvr8chanels1tbapp": [
+      "/catalogo/da22c57705250a3f295c.webp",
+      "/catalogo/2f68db168bf3be406531.webp",
+      "/catalogo/6cf52cf143f9988f1942.webp",
+      "/catalogo/ca47654475b81ef636e4.webp",
+      "/catalogo/131eb9a79bd364f0caa9.webp",
+      "/catalogo/aa6fc9208eda0bd306a8.webp",
+      "/catalogo/df20a5ecee77bec46035.webp",
+      "/catalogo/4561dd6b61f49676926f.webp"
+    ],
+    "6cam2mpdvr8chanels500gbapp": [
+      "/catalogo/4aa35882ac40d626a340.webp",
+      "/catalogo/01a7ecc2a4b0e0b6547e.webp",
+      "/catalogo/765cb4570beb9c455166.webp",
+      "/catalogo/f7bf39634b2371aa2443.webp",
+      "/catalogo/4f4112761ab1d6152eed.webp",
+      "/catalogo/4c729427a7502633dc34.webp",
+      "/catalogo/07d944685d969a43aef2.webp",
+      "/catalogo/b1ff7b85d2d3f6e28f20.webp"
+    ],
+    "8cam2mpdvr8chanels1tbapp": [
+      "/catalogo/c8261eb6d4629884d3c2.webp",
+      "/catalogo/20e7b0c3e3cae1bb9aba.webp",
+      "/catalogo/e1b4909114c64f125d1d.webp",
+      "/catalogo/34083c55a6feb15623dd.webp",
+      "/catalogo/2660f183603a50190f30.webp",
+      "/catalogo/49fa64e748ae563cf773.webp",
+      "/catalogo/44f78415824611e0346e.webp",
+      "/catalogo/7e3839f090ae754af2e0.webp",
+      "/catalogo/bc9ac0b026f103ad73ba.webp",
+      "/catalogo/a1520a03c9a7c5678e58.webp",
+      "/catalogo/b8f85932a123c48da3b0.webp"
+    ]
+  },
+  "hikvision-hilook": {
+    "10cam2mpdvr16chanels2tbapp": [
+      "/catalogo/dd4bbb98e66aa0cf70fc.webp",
+      "/catalogo/1ff5b5a8e9aa6b4de1ee.webp",
+      "/catalogo/c9330de63f0a8d2771df.webp",
+      "/catalogo/5e03d3fcf7775a3db655.webp"
+    ],
+    "4cam2mpdvr4chanels320gbapp": [
+      "/catalogo/e82b8812f47ef0017c36.webp",
+      "/catalogo/b4c55955127ae08cf98c.webp",
+      "/catalogo/7f832d8d6f5665c9b4c5.webp",
+      "/catalogo/74ba917ffcbd585cbe81.webp",
+      "/catalogo/0a7a6b2359acc4790e4a.webp",
+      "/catalogo/8959cfcb39a5f1e33514.webp",
+      "/catalogo/ee86d18a6599ecf799f1.webp",
+      "/catalogo/5d416b1a654462a839b0.webp",
+      "/catalogo/d5b2b652cc12b4138c6b.webp"
+    ],
+    "8cam2mpdvr4chanelsapp": [
+      "/catalogo/7010d3fe5d3e3b7dc8de.webp",
+      "/catalogo/a670851ef0886616bf34.webp",
+      "/catalogo/3a421eb64cf047f89778.webp"
+    ],
+    "8cam2mpdvr8chanels2tbapp": [
+      "/catalogo/794f8edea9fd9fad1027.webp",
+      "/catalogo/2cf508be8676d1447fdf.webp",
+      "/catalogo/e25909f83361ab8480fb.webp"
+    ]
+  }
+}

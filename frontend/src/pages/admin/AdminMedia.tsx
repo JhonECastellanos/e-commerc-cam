@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import DemoMediaAdmin from '../../components/admin/DemoMediaAdmin';
 import { api } from '../../api/client';
 
 export default function AdminMedia() {
@@ -194,6 +195,7 @@ export default function AdminMedia() {
           </div>
 
           <details className="admin-details card p-4"><summary>Demostraciones incluidas en el carrusel</summary><p>Elige cuáles acompañan a tus banners comerciales. Las demos interactivas siguen disponibles en Casa inteligente.</p><div className="admin-checks">{demoOptions.map(option=><label className="admin-check" key={option.id}><input type="checkbox" checked={demoSlides.split(',').includes(option.id)} onChange={e=>{const selected=new Set(demoSlides.split(',').filter(Boolean));e.target.checked?selected.add(option.id):selected.delete(option.id);setDemoSlides([...selected].join(','));}}/>{option.label}</label>)}</div><button disabled={saving} className="btn btn-primary" onClick={async()=>{if(saving)return;setSaving(true);setError('');try{await api.adminUpdateSetting('hero_demo_slides',demoSlides);}catch(e:any){setError(e.message);}finally{setSaving(false);}}}>{saving?'Guardando…':'Guardar selección de demos'}</button></details>
+          <DemoMediaAdmin/>
           {showCreateForm && (
             <div className="card bg-gray-50 border p-4 space-y-3">
               <h3 className="font-semibold text-gray-900">Nuevo banner</h3>
@@ -330,7 +332,7 @@ export default function AdminMedia() {
         <div className="card space-y-6">
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Foto del técnico (sección Conócenos)</h3>
-            <p className="text-xs text-gray-500 mb-3">Esta imagen se muestra en la sección "Conócenos" de la página de inicio.</p>
+            <p className="text-xs text-gray-500 mb-3">Esta imagen se muestra en la página Conócenos (/conocenos).</p>
             <div className="flex items-start space-x-4">
               <div className="w-40 h-32 bg-gray-100 rounded-lg border overflow-hidden flex-shrink-0">
                 {aboutSetting?.value ? (
