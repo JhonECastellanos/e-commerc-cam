@@ -10,9 +10,11 @@ from app.models.setting import Setting
 from app.models.banner import Banner
 from app.models.product import Product
 from app.models.prospect import Prospect
+from app.models.business import Appointment, BusinessConfig, Conversation, ChatMessage, AgentProposal
 
 __all__ = [
     "User", "Brand", "Combo", "Order", "CoverageArea",
     "SocialLink", "Notification", "PriceChangeLog", "Setting",
     "Banner", "Product", "Prospect",
+    "Appointment", "BusinessConfig", "Conversation", "ChatMessage", "AgentProposal",
 ]

@@ -25,6 +25,10 @@ services:
         required: true
       - path: .env.cloudflare
         required: false
+      - path: .env.whatsapp
+        required: false
+      - path: .env.production-local
+        required: false
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-instalacam}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-instalacam}
     ports:
@@ -37,6 +41,26 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live')\""]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+
+  whatsapp:
+    image: e-commerc-cam-whatsapp
+    build: ./services/whatsapp
+    env_file:
+      - path: .env.whatsapp
+        required: false
+    environment:
+      BACKEND_URL: http://backend:8000
+    volumes:
+      - whatsapp_session:/data
+    shm_size: 256mb
+    init: true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3210/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 20s
       timeout: 5s
       retries: 3
@@ -70,7 +94,7 @@ services:
       frontend:
         condition: service_healthy
     networks: [cloudflare]
-    restart: "no"
+    restart: unless-stopped
     read_only: true
     security_opt: ["no-new-privileges:true"]
 
@@ -78,6 +102,7 @@ networks:
   cloudflare:
 
 volumes:
+  whatsapp_session:
   pgdata:
     name: ${PLATFORM_PG_VOLUME:-e-commerc-cam_plataforma_pgdata}
     external: ${PLATFORM_VOLUMES_EXTERNAL:-false}

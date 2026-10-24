@@ -1,11 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-// Isolate the provider in control tests: actual playback is checked separately against YouTube.
-const playerStub=`window.__videoCommands=[];window.YT={Player:function(node,options){const frame=document.createElement('iframe');frame.title='Vídeo de referencia de videovigilancia';node.replaceWith(frame);this.mute=()=>{};this.playVideo=()=>window.__videoCommands.push('play');this.pauseVideo=()=>window.__videoCommands.push('pause');this.destroy=()=>frame.remove();setTimeout(()=>options.events.onReady(),0);}};window.onYouTubeIframeAPIReady();`;
-test.beforeEach(async({page})=>{
-  await page.route('https://www.youtube.com/iframe_api',route=>route.fulfill({contentType:'text/javascript',body:playerStub}));
-});
-
 test('camera answers survive back navigation and reach WhatsApp and checkout',async({page})=>{
   await page.goto('/');
   const wizard=page.locator('#contratar-camaras');
@@ -61,24 +55,22 @@ test('office questions are conditional; original catalogue photos, filters and d
   await page.screenshot({path:`test-results/${info.project.name}-commerce-home.png`,fullPage:true});
 });
 
-test('video pause controls reach the ready player',async({page})=>{
+test('native security video autoplays muted in a loop without YouTube or playback buttons',async({page})=>{
   await page.goto('/');
-  await expect(page.locator('.youtube-media iframe')).toBeVisible();
-  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands)).toContain('play');
-  await page.getByRole('button',{name:'Pausar vídeo y carrusel'}).click();
-  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('pause');
-  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
-  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('play');
+  const video=page.locator('.hero-slide').first().locator('video');
+  await expect(video).toBeVisible();
+  await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeGreaterThan(.1);
+  expect(await video.evaluate((v:HTMLVideoElement)=>v.muted&&v.loop&&v.playsInline&&!v.controls)).toBe(true);
+  await expect(page.locator('.youtube-media iframe')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:/Pausar vídeo|Reproducir vídeo/})).toHaveCount(0);
 });
 
-test('reduced motion waits for explicit playback',async({page})=>{
+test('reduced motion keeps a static poster without loading video',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
-  await expect(page.getByRole('button',{name:'Reproducir vídeo y carrusel'})).toBeVisible();
+  await expect(page.locator('.hero-slide').first().locator('.hero-poster')).toBeVisible();
+  await expect(page.locator('.hero-slide').first().locator('video')).toHaveCount(0);
   expect(await page.evaluate(()=>Array.from(document.scripts).some(s=>s.src==='https://www.youtube.com/iframe_api'))).toBe(false);
-  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
-  await expect(page.locator('.youtube-media iframe')).toBeVisible();
-  await expect.poll(()=>page.evaluate(()=>(window as any).__videoCommands.at(-1))).toBe('play');
 });
 
 test('administrative banners rotate and retain manual navigation',async({page})=>{
@@ -93,10 +85,10 @@ test('administrative banners rotate and retain manual navigation',async({page})=
   await page.clock.runFor(14000);
   await expect(page.getByRole('button',{name:'Ver diapositiva 2'})).toHaveAttribute('aria-current','true');
   await expect(page.getByRole('heading',{name:'Instalación para tu negocio'})).toBeVisible();
-  await page.getByRole('button',{name:'Diapositiva anterior'}).click();
+  await page.getByRole('button',{name:'Ver diapositiva 1'}).click();
   await page.clock.runFor(1500);
   await expect(page.getByRole('button',{name:'Ver diapositiva 1'})).toHaveAttribute('aria-current','true');
-  await expect(page.getByRole('button',{name:'Pausar vídeo y carrusel'})).toBeVisible();
+  await expect(page.getByRole('button',{name:/Pausar vídeo|Reproducir vídeo/})).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -124,12 +116,9 @@ test('background model clips play, pause and survive horizontal swipe',async({pa
   await expect(video).toBeVisible();
   await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.duration)).toBe(5);
   await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeGreaterThan(.1);
-  await page.getByRole('button',{name:'Pausar vídeo y carrusel'}).click();
+  await page.locator('#contratar-camaras').scrollIntoViewIfNeeded();
   await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.paused)).toBe(true);
-  const time=await video.evaluate((v:HTMLVideoElement)=>v.currentTime);
-  await page.waitForTimeout(350);
-  expect(await video.evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeCloseTo(time,1);
-  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
+  await page.locator('.security-hero').scrollIntoViewIfNeeded();
   await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.paused)).toBe(false);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

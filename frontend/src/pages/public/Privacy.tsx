@@ -17,6 +17,7 @@ export default function Privacy() {
         Versión asesoria-2026-10-v1 · 12 de octubre de 2026
       </p>
       <div className="space-y-6 leading-relaxed">
+        <p>Agenda y asistencia comercial: guardamos el nombre, contacto, horario y conversación necesarios para atender tu solicitud. Si el negocio activa un proveedor de IA, este puede recibir tus mensajes y el catálogo público para responder; evita compartir contraseñas, documentos o datos sensibles en el chat. Puedes pedir atención humana escribiendo ASESOR y detener respuestas automáticas por WhatsApp escribiendo BAJA. Las reservas se confirman después de comprobar la disponibilidad.</p>
         <p>
           Recopilamos tu nombre, medio de contacto, localidad general y las
           respuestas necesarias para estudiar tu instalación. Si lo decides,

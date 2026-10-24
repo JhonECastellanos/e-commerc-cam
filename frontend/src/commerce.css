@@ -26,3 +26,9 @@
 @media(max-width:599px){.catalog-page-summary{width:100%;margin:0}.catalog-pagination{gap:8px}.catalog-swipe-hint{display:block;width:100%;font-size:.75rem}.catalog-pagination button{width:40px;min-height:44px}.featured-carousel-track{margin-left:-16px}.featured-carousel-slide{padding-left:16px}}
 
 @media(max-width:599px){.catalog-pagination button{width:44px}.catalog-page-edge,.catalog-page-number>span{display:none}}
+
+/* Compact visible controls retain a 44px touch target. */
+.featured-carousel-controls button{background:transparent;border:0;position:relative;font-size:22px;color:#1e40af;isolation:isolate}
+.featured-carousel-controls button:before{content:"";position:absolute;inset:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:50%;z-index:-1}
+.hero-pagination>button{font-size:.72rem;padding:6px 10px;min-height:44px}
+@media(max-width:1023px){.featured-carousel-controls button{display:none}.hero-pagination{justify-content:center}.hero-pagination>button:first-child,.hero-pagination>button:last-child{display:none}.hero-pagination>button{font-size:0;width:44px;padding:0;background:transparent;border:0;position:relative}.hero-pagination>button:after{content:"";display:block;width:7px;height:7px;background:#93c5fd;border-radius:50%;margin:auto}.hero-pagination>button[aria-current=true]:after{width:22px;background:white;border-radius:4px}}

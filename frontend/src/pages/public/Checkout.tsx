@@ -23,6 +23,8 @@ export default function Checkout() {
   const [coverageAreas, setCoverageAreas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentsEnabled,setPaymentsEnabled]=useState(false);
+  useEffect(()=>{api.getPublicSettings().then(data=>setPaymentsEnabled(Boolean(data.payments_enabled))).catch(()=>{})},[]);
 
   const [form, setForm] = useState({
     customer_name: '',
@@ -292,7 +294,7 @@ export default function Checkout() {
                 disabled={submitting}
                 className="btn-primary w-full"
               >
-                {submitting ? t('common.loading') : t('checkout.pay_deposit')}
+                {submitting ? t('common.loading') : paymentsEnabled?t('checkout.pay_deposit'):'Enviar solicitud de reserva'}
               </button>
             </div>
           </form>

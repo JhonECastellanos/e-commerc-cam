@@ -64,6 +64,13 @@ export default function AdminMedia() {
     input.click();
   };
 
+  async function uploadVideo(id:number,file?:File){
+    if(!file)return;
+    if(file.size>30*1024*1024){setError('El vídeo debe pesar como máximo 30 MB.');return;}
+    setUploading(`video-${id}`);setError('');
+    try{await api.adminUploadBannerVideo(id,file);loadData();}catch(e:any){setError(e.message);}finally{setUploading(null);}
+  }
+
   const handleUploadAboutImage = async () => {
     const input = document.createElement('input');
     input.type = 'file'; input.accept = 'image/*';
@@ -273,6 +280,7 @@ export default function AdminMedia() {
                       <p className="font-medium text-sm truncate">{b.title || 'Sin título'}</p>
                       {b.subtitle && <p className="text-xs text-gray-500 truncate">{b.subtitle}</p>}
                       {b.video_url && <p className="text-xs text-blue-500 truncate">Video: {b.video_url}</p>}
+                      <label className="block text-sm my-3">Subir vídeo desde el equipo (MP4 H.264, sin audio, máximo 30 MB)<input className="block w-full mt-2" type="file" accept="video/mp4,.mp4" aria-label={`Subir vídeo de ${b.title}`} onChange={e=>void uploadVideo(b.id,e.target.files?.[0])}/></label>
                       <div className="flex flex-wrap gap-2">
                         <button onClick={() => handleEditBanner(b)} className="text-xs text-primary-500 font-medium">Editar</button>
                         <button onClick={() => handleUploadBannerImage(b.id)} className="text-xs text-primary-500 font-medium">
@@ -395,7 +403,7 @@ function getSettingLabel(key: string): string {
 }
 
 const videoLibrary=[
- {label:'Seguridad · YouTube original',url:'https://www.youtube.com/watch?v=CJ3dAAna7jQ'},
+ {label:'Seguridad · MP4 local',url:'/banner-assets/security-loop.mp4'},
  {label:'Casa inteligente',url:'/banner-assets/casa-loop.mp4'},
  {label:'Apartamento inteligente',url:'/banner-assets/apartamento-loop.mp4'},
  {label:'Funciones de cámaras',url:'/banner-assets/functions-loop.mp4'},

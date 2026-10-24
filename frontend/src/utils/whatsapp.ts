@@ -23,7 +23,8 @@ export function whatsappNumber(value?: string | null): string | undefined {
 }
 export function whatsappURL(number: string | undefined, message: string): string | undefined {
   const clean = whatsappNumber(number);
-  return clean ? `https://wa.me/${clean}?text=${encodeURIComponent(message.trim())}` : undefined;
+  const commercial=message.includes('InstalaCámara')?message.trim():`Hola InstalaCámara. ${message.trim()}`;
+  return clean ? `https://wa.me/${clean}?text=${encodeURIComponent(commercial)}` : undefined;
 }
 export function configuredWhatsapp(settings: {
   whatsapp_number?: string;

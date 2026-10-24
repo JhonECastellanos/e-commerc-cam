@@ -5,6 +5,7 @@ from sqlalchemy.orm import joinedload
 from decimal import Decimal
 from typing import Optional
 from app.database import get_db
+from app.config import settings as runtime_settings
 from app.models.brand import Brand
 from app.models.combo import Combo
 from app.models.coverage_area import CoverageArea
@@ -262,4 +263,5 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
         "about_image_url": settings.get("about_image_url", "/images/tecnico-default.svg"),
         "installed_count": installed_count,
         "hero_demo_slides": settings.get("hero_demo_slides", "house,apartment,functions,recording"),
+        "payments_enabled": bool(runtime_settings.womppi_public_key and runtime_settings.womppi_webhook_secret),
     }
