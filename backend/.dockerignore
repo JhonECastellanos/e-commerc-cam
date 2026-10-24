@@ -1,6 +1,5 @@
 .env
 .env.*
-!.env.example
 __pycache__
 *.pyc
 uploads
@@ -9,3 +8,8 @@ tests
 .pytest_cache
 .ruff_cache
 *.sqlite3
+.git
+.local
+.agents
+*.pem
+*.key

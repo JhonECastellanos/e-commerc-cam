@@ -31,7 +31,7 @@ if (-not (Test-Path -LiteralPath $taskConfig)) { Write-ProjectFile $taskConfig "
 # Remain closed until the image, identity, host configuration and guards are checked.
 Write-ProjectFile $taskConfig "{}`n"
 if ($Compilar) { Invoke-ProjectDocker ($taskCompose + @('build', 'frontend')) | Write-Output }
-Invoke-ProjectDocker ($taskCompose + @('up', '-d', '--no-build', '--wait', '--wait-timeout', '120', 'frontend')) | Write-Output
+Invoke-ProjectDocker ($taskCompose + @('up', '-d', '--no-build', '--wait', '--wait-timeout', '900', 'frontend')) | Write-Output
 Invoke-ProjectDocker ($taskCompose + @('up', '-d', '--no-deps', '--no-build', 'tailscale')) | Write-Output
 # Docker Desktop bind mounts may not forward file change notifications. Restart
 # this connector so the empty config is applied before checking the public edge.

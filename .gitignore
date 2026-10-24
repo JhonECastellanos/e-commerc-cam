@@ -1,7 +1,5 @@
 .env
 .env.*
-!.env.example
-!.env.supabase
 __pycache__/
 *.pyc
 venv/
@@ -29,3 +27,11 @@ frontend/playwright-report/
 !docs/catalog-asset-audit.json
 .npm-cache/
 .local/
+/.agents/
+/.claude/
+/skills-lock.json
+/docs/
+/config/repository-manager.json
+*.pfx
+*.p12
+*.kdbx

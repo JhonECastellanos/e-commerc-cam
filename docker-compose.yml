@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10m
+    stop_grace_period: 2m
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
 
@@ -91,7 +93,7 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   cloudflared:
-    image: cloudflare/cloudflared@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c
+    image: cloudflare/cloudflared:2026.10.3@sha256:faa8e0a1475f137c910be6025f43c8e4092fdd35461b31e19fd1390657a1ff39
     profiles: [cloudflare]
     command: ["tunnel", "--no-autoupdate", "--protocol", "http2", "--url", "http://frontend:8082"]
     depends_on:
@@ -103,7 +105,7 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   tailscale:
-    image: tailscale/tailscale:v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
+    image: tailscale/tailscale:v1.104.2@sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d
     profiles: [internet]
     hostname: instalacam
     environment:
