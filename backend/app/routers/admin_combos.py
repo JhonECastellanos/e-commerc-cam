@@ -5,6 +5,9 @@ from sqlalchemy.orm import joinedload
 from app.database import get_db
 from app.models.combo import Combo
 from app.models.brand import Brand
+from app.models.setting import Setting
+from app.routers.public import get_install_fee
+from app.routers.admin_prices import log_change
 from app.models.user import User
 from app.routers.admin_auth import get_current_user
 from pydantic import BaseModel
@@ -70,14 +73,18 @@ async def get_combos_admin(db: AsyncSession = Depends(get_db), user: User = Depe
         select(Combo).options(joinedload(Combo.brand)).order_by(Combo.id)
     )
     combos = result.unique().scalars().all()
+    fee_settings = (await db.execute(select(Setting).where(Setting.key.in_(["install_fee_per_camera", "install_fee_per_camera_wireless"])))).scalars().all()
+    defaults = {setting.key: Decimal(setting.value) for setting in fee_settings}
     output = []
     for c in combos:
-        fee = c.install_fee or Decimal("0")
+        wireless = c.mode == "inalambrico"
+        key = "install_fee_per_camera_wireless" if wireless else "install_fee_per_camera"
+        fee = Decimal(str(c.install_fee)) if c.install_fee is not None else defaults.get(key, Decimal("50000" if wireless else "75000"))
         final_price = c.equipment_price + (fee * c.cameras_count)
         output.append(ComboAdminOut(
             id=c.id, brand_id=c.brand_id, brand_name=c.brand.name if c.brand else None,
             name=c.name, mode=c.mode, resolution=c.resolution, cameras_count=c.cameras_count,
-            equipment_price=c.equipment_price, install_fee=fee, final_price=final_price,
+            equipment_price=c.equipment_price, install_fee=c.install_fee, final_price=final_price,
             is_bestseller=c.is_bestseller, is_budget=c.is_budget, level=c.level,
             warranty_text=c.warranty_text, image_url=c.image_url, active=c.active,
             specs=c.specs, storage_options=c.storage_options, install_complexity=c.install_complexity,
@@ -98,15 +105,18 @@ async def update_combo_admin(
     if not c:
         raise HTTPException(status_code=404, detail="Combo no encontrado")
     for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(c, field, value)
+        old = getattr(c, field)
+        if old != value:
+            await log_change(db, user.id, "combo", combo_id, field, old, value)
+            setattr(c, field, value)
     await db.commit()
     await db.refresh(c)
-    fee = c.install_fee or Decimal("0")
+    fee = await get_install_fee(db, c.mode, c)
     final_price = c.equipment_price + (fee * c.cameras_count)
     return ComboAdminOut(
         id=c.id, brand_id=c.brand_id, brand_name=c.brand.name if c.brand else None,
         name=c.name, mode=c.mode, resolution=c.resolution, cameras_count=c.cameras_count,
-        equipment_price=c.equipment_price, install_fee=fee, final_price=final_price,
+        equipment_price=c.equipment_price, install_fee=c.install_fee, final_price=final_price,
         is_bestseller=c.is_bestseller, is_budget=c.is_budget, level=c.level,
         warranty_text=c.warranty_text, image_url=c.image_url, active=c.active,
         specs=c.specs, storage_options=c.storage_options, install_complexity=c.install_complexity,
@@ -159,13 +169,13 @@ async def create_combo_admin(
     await db.refresh(combo)
     result = await db.execute(select(Brand).where(Brand.id == brand_id))
     brand = result.scalar_one_or_none()
-    fee = combo.install_fee or Decimal("0")
+    fee = await get_install_fee(db, combo.mode, combo)
     final_price = combo.equipment_price + (fee * combo.cameras_count)
     return ComboAdminOut(
         id=combo.id, brand_id=combo.brand_id, brand_name=brand.name if brand else None,
         name=combo.name, mode=combo.mode, resolution=combo.resolution,
         cameras_count=combo.cameras_count, equipment_price=combo.equipment_price,
-        install_fee=fee, final_price=final_price,
+        install_fee=combo.install_fee, final_price=final_price,
         is_bestseller=combo.is_bestseller, is_budget=combo.is_budget, level=combo.level,
         warranty_text=combo.warranty_text, image_url=combo.image_url, active=combo.active,
         specs=combo.specs, storage_options=combo.storage_options,
