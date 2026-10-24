@@ -6,7 +6,7 @@ const files = [];
 async function walk(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {
     const file = path.join(folder, entry.name);
-    if (entry.isDirectory()) await walk(file);
+    if (entry.isDirectory() && entry.name !== 'smart-assets') await walk(file);
     else if (/\.(svg|png|jpe?g|webp|avif)$/i.test(file))
       files.push(
         '/' +
