@@ -10,6 +10,10 @@ if errorlevel 1 (
 )
 docker.exe compose -p e-commerc-cam up --build -d
 if errorlevel 1 exit /b 1
+if exist "%~dp0.local\cloudflare-url.txt" (
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\iniciar-cloudflare.ps1"
+  if errorlevel 1 exit /b 1
+)
 echo.
 echo Plataforma local: http://localhost:8094
 echo Panel: http://localhost:8094/admin/login
