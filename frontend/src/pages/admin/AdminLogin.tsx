@@ -8,7 +8,7 @@ export default function AdminLogin() {
   const { t } = useTranslation();
   const { login } = useAdmin();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@instalacam.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);

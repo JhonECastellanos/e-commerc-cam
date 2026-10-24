@@ -10,7 +10,7 @@ if not env.exists():
         f'POSTGRES_PASSWORD={secrets.token_hex(24)}',
         'POSTGRES_USER=instalacam', 'POSTGRES_DB=instalacam',
         f'SECRET_KEY={secrets.token_hex(32)}',
-        'INITIAL_ADMIN_EMAIL=admin@instalacam.local',
+        f'INITIAL_ADMIN_EMAIL=admin-{secrets.token_hex(6)}@localhost.invalid',
         f'INITIAL_ADMIN_PASSWORD={secrets.token_urlsafe(24)}',
         'FRONTEND_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:8094,http://127.0.0.1:8094',
         'TRUSTED_HOSTS=localhost,127.0.0.1,testserver',

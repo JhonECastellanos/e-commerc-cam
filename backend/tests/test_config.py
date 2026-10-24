@@ -88,3 +88,12 @@ def test_serverless_y_auto_init_db_por_defecto():
 def test_host_list_separa_por_comas():
     settings = Settings(_env_file=None, trusted_hosts="api.example.com, localhost")
     assert settings.host_list == ["api.example.com", "localhost"]
+
+
+def test_runtime_requires_external_credentials(monkeypatch):
+    from pydantic import ValidationError
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    with pytest.raises(ValidationError) as error:
+        Settings(_env_file=None)
+    assert {item["loc"][0] for item in error.value.errors()} == {"secret_key", "database_url"}

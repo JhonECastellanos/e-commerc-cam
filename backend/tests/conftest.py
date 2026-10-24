@@ -1,5 +1,6 @@
 """Fixtures compartidas: app FastAPI con base SQLite en memoria y datos sembrados."""
 import os
+import secrets
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -8,6 +9,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
 os.environ.setdefault("APP_ENV", "development")
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://localhost/isolated_tests")
+os.environ.setdefault("SECRET_KEY", secrets.token_urlsafe(48))
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -25,7 +28,7 @@ from app.models.user import User
 from app.security import rate_limiter
 
 ADMIN_EMAIL = "admin@test.com"
-ADMIN_PASSWORD = "ClaveSegura#2026"
+ADMIN_PASSWORD = secrets.token_urlsafe(24)
 
 
 @pytest_asyncio.fixture

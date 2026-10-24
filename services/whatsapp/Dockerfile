@@ -1,6 +1,6 @@
-FROM node:24-bookworm-slim
+FROM node:24.22.1-bookworm-slim
 ENV NODE_ENV=production PUPPETEER_SKIP_DOWNLOAD=true CHROME_PATH=/usr/bin/chromium
-RUN apt-get update && apt-get install -y --no-install-recommends chromium ca-certificates fonts-liberation && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends chromium ca-certificates fonts-liberation && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev && mkdir -p /data/home && chown -R 10000:10000 /data

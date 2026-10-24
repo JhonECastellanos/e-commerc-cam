@@ -135,3 +135,22 @@ test('all catalog image URLs respond and decoded images render', async ({
     )
     .toBeTruthy();
 });
+
+
+test('model banners preserve the full frame on phone and portrait tablet', async ({page}) => {
+  for (const viewport of [{width:390,height:844},{width:768,height:1024}]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    for (const [index, slide] of [2,3].entries()) {
+      await page.getByRole('button',{name:`Ver diapositiva ${slide}`,exact:true}).click();
+      const model=page.locator('.hero-slide-model').nth(index);
+      const media=model.locator('.hero-model-background');
+      await expect(media.locator('.hero-poster')).toHaveCSS('object-fit','contain');
+      const frame=await media.boundingBox(), copy=await model.locator('.hero-copy').boundingBox();
+      expect(frame).not.toBeNull(); expect(copy).not.toBeNull();
+      expect(frame!.y+frame!.height).toBeLessThanOrEqual(copy!.y);
+      expect(frame!.width/frame!.height).toBeCloseTo(16/9,1);
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
+  }
+});

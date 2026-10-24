@@ -24,7 +24,17 @@ function texture(path: string, color = true) {
 const woodMap = texture('/smart-assets/wood-Diffuse.jpg');
 const woodNormal = texture('/smart-assets/wood-nor_gl.jpg', false);
 const woodRough = texture('/smart-assets/wood-Rough.jpg', false);
-const grassMap = texture('/smart-assets/grass-generated.png');
+const grassPixels = new Uint8Array(64 * 64 * 4);
+let grassSeed = 17;
+for (let i = 0; i < grassPixels.length; i += 4) {
+  grassSeed = (Math.imul(grassSeed, 1664525) + 1013904223) >>> 0;
+  const shade = 155 + (grassSeed % 80);
+  grassPixels.set([shade, shade, shade, 255], i);
+}
+const grassMap = new THREE.DataTexture(grassPixels, 64, 64, THREE.RGBAFormat);
+grassMap.wrapS = grassMap.wrapT = THREE.RepeatWrapping;
+grassMap.colorSpace = THREE.SRGBColorSpace;
+grassMap.needsUpdate = true;
 function material(color: string, roughness = .65, surface = '') {
   const key = `${color}:${roughness}:${surface}`;
   if (!cache.has(key)) {
