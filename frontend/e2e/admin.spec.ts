@@ -9,6 +9,7 @@ test.describe('Existing administration', () => {
     page,
     request,
   }, testInfo) => {
+    test.skip(process.env.E2E_ADMIN_MUTATIONS !== '1', 'Administrative writes require an explicitly selected disposable QA environment.');
     test.skip(
       testInfo.project.name === 'mobile',
       'The existing administrative workflow is validated on desktop.',

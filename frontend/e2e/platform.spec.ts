@@ -22,8 +22,17 @@ test('carousel contains both real interactive scenarios',async({page},info)=>{
   await expect(page.getByRole('heading',{name:'Casa inteligente',exact:true})).toBeVisible();
 });
 for(const scenario of ['casa','apartamento'])test(`${scenario}: architectural presentation, lights, TV, touch panel and restoration`,async({page},info)=>{
+  test.setTimeout(90000);
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(`/simulador/${scenario}`);await rendered(page);
+  if(scenario==='casa') {
+    const all=await page.locator('canvas').screenshot();
+    await page.getByRole('button',{name:'Planta baja',exact:true}).click();
+    await expect.poll(async()=>all.equals(await page.locator('canvas').screenshot())).toBe(false);
+    await page.getByRole('button',{name:'Planta alta',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Planta alta',exact:true})).toHaveAttribute('aria-pressed','true');
+    await page.getByRole('button',{name:'Casa completa',exact:true}).click();
+  }
   await expect(page.getByRole('button',{name:/Añadir|Retirar equipo|Colocar .*plano/})).toHaveCount(0);
   await page.getByRole('button',{name:'Ver de noche',exact:true}).click();
   const before=await page.locator('canvas').screenshot();

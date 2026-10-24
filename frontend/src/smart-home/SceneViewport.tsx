@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { roomElevation, type StoreyView } from './architecture';
 import {
   buildProperty,
   buildDevice,
@@ -44,6 +45,7 @@ type Props = {
   coverage?: boolean;
   preview?: boolean;
   daylight?: boolean;
+  storey?: StoreyView;
   onSelect?: (id: string) => void;
   onPlace?: (room: string, x: number, z: number) => void;
   onMove?: (device: VirtualDevice) => void;
@@ -95,7 +97,7 @@ class PropertyRenderer {
     this.renderer.setPixelRatio(
       Math.min(window.devicePixelRatio, props.preview ? 1.25 : 1.75),
     );
-    this.renderer.setClearColor('#19262e');
+    this.renderer.setClearColor(props.config.scenario==='casa'?'#e5ebed':'#19262e');
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -135,7 +137,7 @@ class PropertyRenderer {
     this.scene.add(sun);
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(180, 180),
-      new THREE.MeshStandardMaterial({ color: '#101b24', roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: props.config.scenario==='casa'?'#dce3e6':'#101b24', roughness: 1 }),
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -0.61;
@@ -238,10 +240,10 @@ class PropertyRenderer {
     } else {
       this.camera.up.set(0, 1, 0);
       const house = this.current.config.scenario === 'casa';
-      this.camera.position.set(house ? 18 : 15, house ? 28 : 22, house ? 25 : 20);
+      this.camera.position.set(house ? 20 : 15, house ? 21 : 22, house ? 26 : 20);
     }
-    this.orbit.target.set(0, 0, 0);
-    this.camera.lookAt(0, 0, 0);
+    this.orbit.target.set(0, this.current.config.scenario==='casa'?1.6:0, 0);
+    this.camera.lookAt(this.orbit.target);
     this.orbit.update();
     if (view === 'recorrido') this.goToRoom('sala');
     this.dirty = true;
@@ -252,13 +254,13 @@ class PropertyRenderer {
     );
     if (!r) return;
     if (this.view === 'recorrido') {
-      this.camera.position.set(r.x, 1.65, r.z + Math.min(r.d / 3, 1));
+      this.camera.position.set(r.x, roomElevation(this.current.config.scenario,r.id)+1.65, r.z + Math.min(r.d / 3, 1));
       this.yaw = 0;
       this.pitch = 0;
       this.look();
     } else {
       const offset = this.camera.position.clone().sub(this.orbit.target);
-      this.orbit.target.set(r.x, 0, r.z);
+      this.orbit.target.set(r.x, roomElevation(this.current.config.scenario,r.id), r.z);
       this.camera.position
         .copy(this.orbit.target)
         .add(offset.multiplyScalar(0.65));
@@ -288,7 +290,9 @@ class PropertyRenderer {
     this.model.walls.visible = props.walls !== false;
     this.model.walls.children.forEach(wall => {
       wall.scale.y = this.view === 'recorrido' || props.roof ? 1 : (wall.userData.cutaway ?? 1);
+      wall.visible=this.visibleStorey(wall.userData.elevation||0);
     });
+    this.model.storeys.forEach(root=>{root.visible=this.visibleStorey(root.userData.elevation||0);});
     this.ambient.intensity = props.daylight === false ? .12 : .45;
     this.sun.intensity = props.daylight === false ? .12 : 1.8;
     this.scene.environmentIntensity = props.daylight === false ? .12 : .6;
@@ -307,6 +311,8 @@ class PropertyRenderer {
         device.kind === 'light' && device.on ? lights++ < 6 : true,
         props.config,
       );
+      obj.position.y+=roomElevation(props.config.scenario,device.room);
+      obj.visible=this.visibleStorey(roomElevation(props.config.scenario,device.room));
       this.devices.add(obj);
       if (device.id === props.selected) {
         if (props.onMove && this.view !== 'recorrido' && !props.preview && !props.placing)
@@ -319,7 +325,8 @@ class PropertyRenderer {
           }),
         );
         ring.rotation.x = -Math.PI / 2;
-        ring.position.set(device.x, 0.08, device.z);
+        ring.position.set(device.x, roomElevation(props.config.scenario,device.room)+0.08, device.z);
+        ring.visible=obj.visible;
         this.overlays.add(ring);
       }
       if (
@@ -333,6 +340,9 @@ class PropertyRenderer {
       ? 'crosshair'
       : 'grab';
     this.dirty = true;
+  }
+  visibleStorey(y:number) {
+    return this.current.storey==='ground'?y===0:this.current.storey==='upper'?y>0:true;
   }
   pointerDown = (e: PointerEvent) => {
     this.clickOrigin = { x: e.clientX, y: e.clientY };
@@ -387,7 +397,7 @@ class PropertyRenderer {
           hit.point.z,
         );
     } else {
-      const hit = this.ray.intersectObjects(this.devices.children, true)[0];
+      const hit = this.ray.intersectObjects(this.devices.children.filter(d=>d.visible), true)[0];
       if (hit) this.current.onSelect?.(hit.object.userData.deviceId);
     }
   };
@@ -539,6 +549,7 @@ const SceneViewport = forwardRef<ViewportHandle, Props>(
         props.walls,
         props.coverage,
         props.daylight,
+        props.storey,
       ],
     );
     return (

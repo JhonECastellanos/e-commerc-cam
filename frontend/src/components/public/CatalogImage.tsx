@@ -1,5 +1,6 @@
 import { useEffect, useState, type ImgHTMLAttributes } from 'react';
 import manifest from '../../data/image-manifest.json';
+import photos from '../../data/catalog-photos.json';
 
 // Preserve remote uploads. Normalize legacy Windows paths and public/uploads prefixes.
 export function imagePath(value?: string | null): string | undefined {
@@ -7,6 +8,12 @@ export function imagePath(value?: string | null): string | undefined {
   const path = value.trim().replace(/\\/g, '/');
   if (/^https?:\/\//i.test(path)) return path;
   if (/^(data:|javascript:|file:)/i.test(path)) return undefined;
+  const catalogIndex = path.toLowerCase().indexOf('catalogo/');
+  if(catalogIndex>=0) {
+    const original=path.slice(catalogIndex+'catalogo/'.length);
+    const photo=photos.find(p=>p.source.toLowerCase()===original.toLowerCase());
+    if(photo)return photo.url;
+  }
   if (path.startsWith('/api/uploads/')) return path;
   if (/^\/?uploads\//.test(path)) return '/api/' + path.replace(/^\//, '');
   const publicIndex = path.toLowerCase().indexOf('public/');

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import CatalogImage, { imagePath } from '../../components/public/CatalogImage';
+import { comboPhotos } from '../../utils/catalogPhotos';
 
 const MODE_IMAGES: Record<string, string[]> = {
   cableado: ['combo-hero', 'camara-detalle', 'dvr-detalle'],
@@ -70,6 +71,8 @@ export default function ComboDetail() {
 
   const getGalleryImages = (): string[] => {
     if (!combo) return [];
+    const photographs=comboPhotos(combo);
+    if(photographs.length)return photographs.map(p=>imagePath(p)!);
     const folder = getBrandFolder(combo.brand_name);
     const mode = combo.mode;
     const suffixes = MODE_IMAGES[mode] || MODE_IMAGES.cableado;
@@ -136,6 +139,7 @@ export default function ComboDetail() {
               </span>
             </div>
           </div>
+          {comboPhotos(combo).length>0&&<p className="text-xs text-gray-500 mt-2">Fotografías del kit de referencia. Componentes y almacenamiento sujetos a confirmación en la cotización.</p>}
           {galleryImages.length > 1 && (
             <div className="grid grid-cols-3 gap-3 mt-3">
               {galleryImages.slice(1).map((img, idx) => (

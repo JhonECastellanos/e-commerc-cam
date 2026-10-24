@@ -2,10 +2,12 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ROOMS, type Scenario, type Room, type VirtualDevice, type Configuration } from './domain';
+import { roomElevation } from './architecture';
 
 export type PropertyModel = {
   group: THREE.Group; walls: THREE.Group; roof: THREE.Group; doors: THREE.Group[];
   floors: THREE.Mesh[]; labels: THREE.Sprite[]; obstacles: THREE.Box3[];
+  storeys: THREE.Group[];
 };
 const cache = new Map<string, THREE.MeshStandardMaterial>();
 const loader = new THREE.TextureLoader();
@@ -177,20 +179,23 @@ export function buildProperty(scenario: Scenario): PropertyModel {
   const floors:THREE.Mesh[]=[],doors:THREE.Group[]=[],obstacles:THREE.Box3[]=[];
   box(group,0,-.26,0,14.2,.44,scenario==='casa'?24.6:12.5,material('#707b7a'),.06);
   const rooms=ROOMS[scenario],inside=rooms.filter(r=>!r.outdoor);
+  const storeys: THREE.Group[]=[];
   for(const room of rooms) {
+    const root=new THREE.Group(); root.position.y=roomElevation(scenario,room.id);root.userData.elevation=root.position.y;group.add(root);storeys.push(root);
     const mat=room.use==='garden'?material('#bac7a7',1):room.use==='bathroom'?material('#c6c0b1',.8):oak();
     if(room.use==='garden')mat.map=grassMap;
-    const floor=box(group,room.x,-.035,room.z,room.w,.13,room.d,mat);
+    const floor=box(root,room.x,-.035,room.z,room.w,.13,room.d,mat);
     const uv=floor.geometry.attributes.uv; for(let i=0;i<uv.count;i++) uv.setXY(i,uv.getX(i)*room.w/2.8,uv.getY(i)*room.d/2.8); uv.needsUpdate=true;
-    floor.userData.roomId=room.id; floors.push(floor); furnishings(group,room);
+    floor.userData.roomId=room.id; floors.push(floor); furnishings(root,room);
   }
   // Particiones compartidas únicas: evita paredes superpuestas del plano por habitación.
   const xs=[...new Set(inside.flatMap(r=>[r.x-r.w/2,r.x+r.w/2]).map(x=>+x.toFixed(3)))].sort((a,b)=>a-b);
   const zs=[...new Set(inside.flatMap(r=>[r.z-r.d/2,r.z+r.d/2]).map(z=>+z.toFixed(3)))].sort((a,b)=>a-b);
-  const at=(x:number,z:number)=>inside.find(r=>x>r.x-r.w/2&&x<r.x+r.w/2&&z>r.z-r.d/2&&z<r.z+r.d/2);
+  let elevation=0;
+  const at=(x:number,z:number)=>inside.find(r=>roomElevation(scenario,r.id)===elevation&&x>r.x-r.w/2&&x<r.x+r.w/2&&z>r.z-r.d/2&&z<r.z+r.d/2);
   function wall(x:number,z:number,len:number,alongX:boolean,a?:Room,b?:Room) {
     const exterior=!a||!b, room=a||b!;
-    const g=new THREE.Group(); g.position.set(x,0,z); if(!alongX)g.rotation.y=Math.PI/2;
+    const g=new THREE.Group(); g.position.set(x,elevation,z);g.userData.elevation=elevation; if(!alongX)g.rotation.y=Math.PI/2;
     g.userData.cutaway=exterior ? (x>6||z>5.7 ? .3:1):.78; walls.add(g);
     const door= !exterior || room.use==='hall'; const opening=Math.min(door? .92:2.6,len-.25);
     const h=2.7;
@@ -218,6 +223,8 @@ export function buildProperty(scenario: Scenario): PropertyModel {
       cylinder(g,0,2.57,.14,.02,opening+.5,metal()).rotation.z=Math.PI/2;
     }
   }
+  for(const level of scenario==='casa'?[0,3.2]:[0]) {
+  elevation=level;
   for(const z of zs) {
     let start=0, lastKey='',lastA:Room|undefined,lastB:Room|undefined;
     for(let i=0;i<xs.length;i++) {
@@ -234,8 +241,37 @@ export function buildProperty(scenario: Scenario): PropertyModel {
       if(key!==lastKey) {if(lastKey)wall(x,(start+zs[i])/2,zs[i]-start,false,lastA,lastB);start=zs[i];lastKey=key;lastA=a;lastB=b;}
     }
   }
-  box(roof,0,2.92,0,14.1,.22,12.3,material('#d7d3c8'),.03);
-  return {group,walls,roof,doors,floors,labels:[],obstacles};
+  }
+  if(scenario==='casa') {
+    // Open upper terrace and landing: the cutaway preserves the lower living room.
+    const terrace=new THREE.Group();terrace.position.y=3.2;terrace.userData.elevation=3.2;group.add(terrace);storeys.push(terrace);
+    box(terrace,-3.6,-.07,3.5,5.8,.22,5,cream(),.02);
+    box(terrace,0,-.07,0,1.4,.22,12,cream(),.02);
+    box(terrace,-3.6,.82,3.5,2,.09,1,cream(),.04);
+    for(const x of [-4.3,-2.9])for(const z of [3.2,3.8])box(terrace,x,.41,z,.05,.82,.05,metal());
+    for(const x of [-4.25,-2.95])for(const z of [2.6,4.4])chair(terrace,x,z,z<3.5?Math.PI:0);
+    plant(terrace,-5.7,5.1,.9);plant(terrace,-1.35,5.1,.9);
+    const glass=new THREE.MeshPhysicalMaterial({color:'#b5d3db',transparent:true,opacity:.17,roughness:.08,metalness:.05,depthWrite:false,side:THREE.DoubleSide});
+    for(const [x,z,w,d] of [[-3.6,6,5.8,.025],[-6.5,3.5,.025,5],[0,6,1.4,.025]]) {
+      box(terrace,x,.57,z,w,1.15,d,glass);
+      box(terrace,x,1.15,z,Math.max(w,.05),.045,Math.max(d,.05),metal());
+    }
+    const ground=new THREE.Group();ground.userData.elevation=0;group.add(ground);storeys.push(ground);
+    box(ground,0,-.035,-2.5,13,.13,7,oak());
+    // A glazed lounge beneath the upper sleeping wing gives the facade its depth.
+    furnishings(ground,{id:'salon',name:'Salón',x:3.6,z:3.5,w:5.8,d:5,use:'living',color:'#eee8dc'});
+    for(const x of [-6.5,6.5])for(const z of [-6,1,6])box(ground,x,1.53,z,.24,3.1,.24,cream());
+    for(const z of [-6,6])box(ground,0,3.08,z,13.3,.24,.25,cream());
+    for(let i=0;i<16;i++)box(ground,-6.8,.1+i*.1,5.6-i*.3,.75,.2+i*.2,.31,cream());
+    const chimney=new THREE.Group();chimney.userData.elevation=0;group.add(chimney);storeys.push(chimney);
+    box(chimney,-5.95,3,-5.45,.5,6,.55,metal(),.02);
+    box(chimney,-5.95,6.1,-5.45,.7,.12,.75,metal(),.02);
+    box(roof,0,6.12,0,13.5,.22,12.3,cream(),.03);
+  } else box(roof,0,2.92,0,14.1,.22,12.3,material('#d7d3c8'),.03);
+  group.updateMatrixWorld(true);
+  // Obstacles are calculated after storey transforms have been applied.
+  obstacles.length=0;walls.traverse(o=>{if((o as THREE.Mesh).isMesh)obstacles.push(new THREE.Box3().setFromObject(o));});
+  return {group,walls,roof,doors,floors,labels:[],obstacles,storeys};
 }
 function screenTexture(device:VirtualDevice,config?:Configuration) {
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=320;const ctx=canvas.getContext('2d')!;

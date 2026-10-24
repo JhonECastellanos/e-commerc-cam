@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import CatalogImage from './CatalogImage';
+import { comboPhotos } from '../../utils/catalogPhotos';
 
 interface ComboCardProps {
   combo: any;
@@ -44,7 +45,7 @@ export default function ComboCard({ combo }: ComboCardProps) {
 
       <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 overflow-hidden flex items-center justify-center relative">
         {combo.image_url ? (
-          <CatalogImage src={combo.image_url} alt={combo.brand_name} className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105" />
+          <CatalogImage src={comboPhotos(combo)[0] || combo.image_url} title={comboPhotos(combo).length?'Fotografía de kit de referencia; componentes sujetos a confirmación.':undefined} alt={combo.brand_name} className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105" />
         ) : (
           <span className="text-4xl">📹</span>
         )}

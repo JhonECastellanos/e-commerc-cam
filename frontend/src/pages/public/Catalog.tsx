@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import CatalogImage from '../../components/public/CatalogImage';
+import { comboPhotos } from '../../utils/catalogPhotos';
 
 const LEVEL_ORDER = ['economico', 'intermedio', 'premium'];
 const LEVEL_LABELS: Record<string, string> = {
@@ -72,7 +73,7 @@ export default function Catalog() {
               </div>
 
               <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
-                <CatalogImage src={combo.image_url} alt={combo.name || `${combo.brand_name}: ${combo.cameras_count} cámaras`} className="w-full h-full object-contain p-3" />
+                <CatalogImage src={comboPhotos(combo)[0] || combo.image_url} title={comboPhotos(combo).length?'Fotografía de kit de referencia; los componentes y el almacenamiento se confirman en la cotización.':undefined} alt={combo.name || `${combo.brand_name}: ${combo.cameras_count} cámaras`} className="w-full h-full object-contain p-3" />
               </div>
 
               <div className="text-center mb-3">
