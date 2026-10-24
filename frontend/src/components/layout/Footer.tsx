@@ -68,7 +68,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} InstalaCámara. Todos los derechos reservados. <Link to="/admin/login" className="inline-flex min-h-11 items-center ml-4 text-gray-300 hover:text-white">Administración</Link>
+          &copy; {new Date().getFullYear()} InstalaCámara. Todos los derechos reservados. {['localhost','127.0.0.1','[::1]','::1'].includes(window.location.hostname) && <Link to="/admin/login" className="inline-flex min-h-11 items-center ml-4 text-gray-300 hover:text-white">Administración</Link>}
         </div>
       </div>
     </footer>
