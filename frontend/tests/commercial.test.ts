@@ -22,6 +22,11 @@ describe('Selección de cámaras',()=>{
     expect(result.compatible.map(c=>c.id)).toEqual([3,2]);
     expect(result.reasons.join(' ')).toContain('3 áreas');
   });
+  it('aprovecha un combo real de tres cámaras sin subir a cuatro para tres áreas',()=>{
+    const result=recommendCameras({property:'casa',areas:3,priority:'precio',environment:'ambos',existing:'no',connectivity:'cable'},[combo(1,4),{...combo(2,3),brand_name:'Dahua / Cooper'}]);
+    expect(result.custom).toBe(false);expect(result.compatible.map(c=>c.id)).toEqual([2]);
+    expect(result.reasons.join(' ')).toContain('sin aumentar innecesariamente');
+  });
   it('no vende un combo como solución de varias viviendas o equipos no revisados',()=>{
     for(const answers of [{property:'edificio',units:40,areas:4},{existing:'si',areas:4},{areas:18},{areas:4,connectivity:'ninguna'}]){
       const result=recommendCameras(answers,[combo(1,4),combo(2,8)]);
