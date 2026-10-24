@@ -465,8 +465,9 @@ class PropertyRenderer {
         (dx * Math.cos(this.yaw) + dz * Math.sin(this.yaw)) * delta * 2.2;
       next.z +=
         (-dx * Math.sin(this.yaw) + dz * Math.cos(this.yaw)) * delta * 2.2;
+      const nextRoom=roomAt(this.current.config.scenario,next.x,next.z);
       if (
-        roomAt(this.current.config.scenario, next.x, next.z) &&
+        nextRoom && Math.abs(next.y-(1.65+roomElevation(this.current.config.scenario,nextRoom.id)))<.1 &&
         !this.model.obstacles.some((o) =>
           o.clone().expandByScalar(0.12).containsPoint(next),
         )
