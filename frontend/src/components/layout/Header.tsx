@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import { configuredPublicLink } from '../../api/contact';
 
 export default function Header() {
   const { t, i18n } = useTranslation();
@@ -16,11 +17,13 @@ export default function Header() {
   const navLinks = [
     { to: '/', label: t('nav.home') },
     { to: '/catalogo', label: t('nav.catalog') },
+    { to: '/servicios', label: 'Soluciones inteligentes' },
+    { to: '/asesoria', label: 'Asesoría' },
     { to: '/conocenos', label: t('nav.about') },
     { to: '/condiciones', label: t('nav.terms') },
   ];
 
-  const whatsappLink = socialLinks.find((l) => l.platform === 'whatsapp');
+  const whatsappLink = socialLinks.find((l) => l.platform === 'whatsapp' && configuredPublicLink(l.url));
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">

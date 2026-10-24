@@ -9,9 +9,10 @@ from app.models.price_change_log import PriceChangeLog
 from app.models.setting import Setting
 from app.models.banner import Banner
 from app.models.product import Product
+from app.models.prospect import Prospect
 
 __all__ = [
     "User", "Brand", "Combo", "Order", "CoverageArea",
     "SocialLink", "Notification", "PriceChangeLog", "Setting",
-    "Banner", "Product",
+    "Banner", "Product", "Prospect",
 ]

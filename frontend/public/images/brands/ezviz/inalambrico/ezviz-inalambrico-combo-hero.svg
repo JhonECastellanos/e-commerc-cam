@@ -5,7 +5,7 @@
       <stop offset="100%" style="stop-color:#e65100;stop-opacity:0.8" />
     </linearGradient>
   </defs>
-  <rect width="600" height="400" rx="12" fill="url(#bg-ezviz")/>
+  <rect width="600" height="400" rx="12" fill="url(#bg-ezviz)"/>
   <circle cx="480" cy="120" r="100" fill="#ff9800" opacity="0.15"/>
   <circle cx="120" cy="320" r="80" fill="#ff9800" opacity="0.1"/>
   <g transform="translate(300,160)" fill="none" stroke="white" stroke-width="2.5">

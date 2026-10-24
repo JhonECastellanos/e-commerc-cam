@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
+import { Link } from 'react-router-dom';
 
 export default function FloatingWhatsApp() {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ export default function FloatingWhatsApp() {
 
   const cleanNumber = number.replace(/[^0-9]/g, '');
   const waLink = `https://wa.me/${cleanNumber}?text=${encodeURIComponent('Hola, quiero información sobre cámaras de seguridad')}`;
+  if (cleanNumber.length < 7) return <Link to="/asesoria" title="Solicitar asesoría personalizada" className="fixed bottom-6 right-6 z-50 bg-primary-500 text-white px-4 py-3 rounded-full shadow-lg text-sm font-semibold">Asesoría</Link>;
 
   return (
     <a

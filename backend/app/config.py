@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     womppi_webhook_secret: str = ""
     whatsapp_provider: str = "off"
     whatsapp_number: str = ""
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.1-flash-lite"
     evolution_api_url: Optional[str] = None
     evolution_api_key: Optional[str] = None
     initial_admin_email: Optional[str] = None
