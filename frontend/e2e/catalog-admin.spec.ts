@@ -6,17 +6,20 @@ test('all active combos, Dahua photographs and discreet filtered pagination',asy
   const combos=await response.json();expect(combos.length).toBeGreaterThan(3);
   expect(combos.some((c:any)=>c.name==='3cam_2mp_dvr_4chanels_500gb_app')).toBe(true);
   await page.goto('/catalogo');
-  await page.getByLabel('Marca del combo').selectOption('Dahua / Cooper');
   const nav=page.getByRole('navigation',{name:'Paginación de combos'});
   await expect(nav).toBeVisible();
   await expect(page.locator('.commerce-combo-grid .combo-commerce-card')).toHaveCount(6);
+  await page.getByRole('button',{name:'Página siguiente de combos',exact:true}).click();
+  await expect(nav.getByRole('button',{name:'Página 2 de combos',exact:true})).toHaveAttribute('aria-current','page');
+  await expect(page.locator('.commerce-combo-grid')).toContainText('10 cámaras · 2 MP · DVR 16 canales · 2 TB');
+  await page.getByLabel('Marca del combo').selectOption('Dahua / Cooper');
+  await expect(nav).toHaveCount(0);
   await expect(page.locator('.commerce-combo-grid')).toContainText('3 cámaras · 2 MP · DVR 4 canales · 500 GB');
+  await expect(page.locator('.commerce-combo-grid')).not.toContainText('13 cámaras');
   for(const image of await page.locator('.commerce-combo-grid img').all()){
     await image.scrollIntoViewIfNeeded();await expect.poll(()=>image.evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
   }
-  await page.getByRole('button',{name:'Página siguiente de combos',exact:true}).click();
-  await expect(nav.getByRole('button',{name:'Página 2 de combos',exact:true})).toHaveAttribute('aria-current','page');
-  await page.getByLabel('Modo de instalación').selectOption('inalambrico');
+  await page.getByLabel('Marca del combo').selectOption('');
   await expect(nav.getByRole('button',{name:'Página 1 de combos',exact:true})).toHaveAttribute('aria-current','page');
   await page.screenshot({path:`test-results/${info.project.name}-catalog-combos.png`,fullPage:true});
 });

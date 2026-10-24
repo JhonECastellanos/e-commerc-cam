@@ -11,6 +11,7 @@ async def test_named_dahua_without_level_is_public_with_original_name_and_price(
     await db_session.flush()
     combo = Combo(brand_id=brand.id, name="3cam_2mp_dvr_4chanels_500gb_app", mode="cableado", resolution="2MP", cameras_count=3, equipment_price=Decimal("549000"), install_fee=Decimal("0"), active=True, instalacion_incluida=False)
     db_session.add(combo)
+    db_session.add(Combo(brand_id=brand.id, mode="cableado", resolution="2MP", cameras_count=8, equipment_price=100000, active=True))
     await db_session.commit()
     response = await client.get("/api/combos", params={"brand": "dahua-cooper"})
     assert response.status_code == 200
