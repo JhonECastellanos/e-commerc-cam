@@ -23,7 +23,7 @@ export default function FAQ() {
     },
   );
   return (
-    <main className="max-w-3xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-8">Preguntas frecuentes</h1>
       <div className="space-y-4">
         {faqs.map((f) => (
@@ -37,6 +37,6 @@ export default function FAQ() {
         Solicitar asesoría personalizada
       </Link>
       <div className="mt-4"><WhatsappCTA message="Hola, tengo una consulta sobre cámaras e instalación."/></div>
-    </main>
+    </div>
   );
 }
