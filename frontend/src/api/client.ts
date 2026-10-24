@@ -50,6 +50,12 @@ async function uploadForm<T>(url: string, formData: FormData): Promise<T> {
 }
 
 export const api = {
+  getAdvisoryPrivacy: () => request<any>('/advisory/privacy'),
+  advisoryProfile: (data: unknown) => request<any>('/advisory/profile', { method: 'POST', body: JSON.stringify(data) }),
+  submitAdvisory: (data: unknown, key: string) => request<any>('/advisory/requests', { method: 'POST', body: JSON.stringify(data), headers: { 'Idempotency-Key': key } }),
+  adminGetAdvisories: (page = 1) => request<any[]>(`/admin/advisory/requests?page=${page}`),
+  adminReviewAdvisory: (id: number, data: unknown) => request<any>(`/admin/advisory/requests/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  interpretSimulation: (data: unknown) => request<{ provider: string; reply: string; action: { ids: string[]; on: boolean } | null }>('/simulation/interpret', { method: 'POST', body: JSON.stringify(data) }),
   getBrands: () => request<any[]>('/brands'),
   getCombos: (params?: Record<string, string>) => {
     const qs = params ? '?' + new URLSearchParams(params).toString() : '';
@@ -145,7 +151,7 @@ export const api = {
 
   adminGetCombosAdmin: () => request<any[]>('/admin/combos-admin'),
   adminCreateCombo: (data: URLSearchParams) =>
-    request<any>('/admin/combos-admin', { method: 'POST', body: data.toString(), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    request<any>(`/admin/combos-admin?${data.toString()}`, { method: 'POST' }),
   adminUpdateComboAdmin: (id: number, data: any) =>
     request<any>(`/admin/combos-admin/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   adminDeleteCombo: (id: number) =>
@@ -158,7 +164,7 @@ export const api = {
 
   adminGetProductsAdmin: () => request<any[]>('/admin/products-admin'),
   adminCreateProduct: (data: URLSearchParams) =>
-    request<any>('/admin/products-admin', { method: 'POST', body: data.toString(), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    request<any>(`/admin/products-admin?${data.toString()}`, { method: 'POST' }),
   adminUpdateProductAdmin: (id: number, data: any) =>
     request<any>(`/admin/products-admin/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   adminDeleteProduct: (id: number) =>
@@ -190,6 +196,11 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
     return uploadForm<any>(`/api/admin/banners/${id}/upload`, formData);
+  },
+  adminUploadBannerVideo: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return uploadForm<{video_url:string}>(`/api/admin/banners/${id}/upload-video`, formData);
   },
   adminUploadBrandLogo: (id: number, file: File) => {
     const formData = new FormData();

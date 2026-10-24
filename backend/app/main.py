@@ -1,4 +1,6 @@
 import logging
+import asyncio
+from contextlib import suppress
 import os
 import time
 import uuid
@@ -28,7 +30,12 @@ async def lifespan(app: FastAPI):
     if settings.auto_init_db:
         await init_db()
         await seed_all()
+    from app.services.chat_worker import run_outbox
+    outbox = asyncio.create_task(run_outbox())
     yield
+    outbox.cancel()
+    with suppress(asyncio.CancelledError):
+        await outbox
     await engine.dispose()
 
 
@@ -47,7 +54,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_credentials=False,  # Bearer tokens; cookies will enable this only with CSRF protection.
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Order-Access-Token", "X-Request-ID"],
+    allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Order-Access-Token", "X-Request-ID", "X-Chat-Token", "X-Booking-Token", "MCP-Protocol-Version"],
     expose_headers=["X-Request-ID"],
     max_age=600,
 )
@@ -61,7 +68,7 @@ async def request_context(request: Request, call_next):
     started = time.perf_counter()
     try:
         content_length = request.headers.get("content-length")
-        maximum = settings.max_upload_bytes if "/upload" in request.url.path else settings.max_request_body_bytes
+        maximum = settings.max_video_upload_bytes + 65536 if request.url.path.endswith('/upload-video') else settings.max_upload_bytes if "/upload" in request.url.path else settings.max_request_body_bytes
         if content_length and int(content_length) > maximum:
             return JSONResponse(status_code=413, content={"detail": "Solicitud demasiado grande", "request_id": request_id})
         response = await call_next(request)
@@ -118,7 +125,7 @@ for sub in ["catalog", "agreements", "banners", "productos", "combos", "equipo",
         break
 class PublicUploadsStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
-        if path == "agreements" or path.startswith("agreements/"):
+        if path.lower() == "agreements" or path.lower().startswith("agreements/"):
             raise HTTPException(status_code=404, detail="Archivo no encontrado")
         return await super().get_response(path, scope)
 
@@ -154,3 +161,9 @@ app.include_router(admin_products.router, prefix="/api/admin", tags=["Admin Prod
 app.include_router(admin_combos.router, prefix="/api/admin", tags=["Admin Combos"])
 app.include_router(whatsapp.router, prefix="/api", tags=["WhatsApp"])
 app.include_router(ws.router, prefix="/api", tags=["Tiempo real"])
+from app.routers import advisory, simulation  # noqa: E402
+app.include_router(advisory.router, prefix="/api", tags=["Asesoría"])
+app.include_router(simulation.router, prefix="/api", tags=["Simulación virtual"])
+from app.routers import agenda, business_agent  # noqa: E402
+app.include_router(agenda.router, prefix="/api", tags=["Agenda"])
+app.include_router(business_agent.router, prefix="/api", tags=["Agente comercial"])

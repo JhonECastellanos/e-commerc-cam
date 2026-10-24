@@ -23,6 +23,8 @@ class BrandUpdate(BaseModel):
 
 class ComboPublic(BaseModel):
     id: int
+    name: Optional[str] = None
+    instalacion_incluida: bool = True
     brand_id: int
     brand_name: Optional[str] = None
     mode: str
@@ -277,6 +279,10 @@ class BannerOut(BaseModel):
 
 class ProductOut(BaseModel):
     id: int
+    brand_id: Optional[int] = None
+    brand_name: Optional[str] = None
+    instalacion_price: Optional[float] = None
+    specs: Optional[dict] = None
     name: str
     description: Optional[str] = None
     price: Optional[float] = None

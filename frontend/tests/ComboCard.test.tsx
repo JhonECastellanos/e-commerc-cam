@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '../src/i18n';
 import ComboCard from '../src/components/public/ComboCard';
+import { vi } from 'vitest';
+vi.mock('../src/hooks/useCommercialContact',()=>({useCommercialContact:()=>undefined}));
 
 const combo = {
   id: 7,
@@ -30,8 +32,8 @@ describe('ComboCard', () => {
   it('muestra marca, cámaras, resolución y precio formateado en COP', () => {
     renderCard();
     expect(screen.getByText('Hikvision')).toBeInTheDocument();
-    expect(screen.getByText(/4 .* - 2MP/)).toBeInTheDocument();
-    expect(screen.getByText('$1.300.000 COP')).toBeInTheDocument();
+    expect(screen.getByText('4 cámaras · 2MP')).toBeInTheDocument();
+    expect(screen.getByText(/\$\s*1\.300\.000 COP/)).toBeInTheDocument();
   });
 
   it('enlaza al detalle y al checkout del combo', () => {
@@ -44,13 +46,13 @@ describe('ComboCard', () => {
 
   it('muestra la insignia de más vendido solo cuando aplica', () => {
     renderCard();
-    expect(screen.getByText(/🏆/)).toBeInTheDocument();
+    expect(screen.getByText('Destacado')).toBeInTheDocument();
     renderCard({ ...combo, id: 8, is_bestseller: false });
-    expect(screen.getAllByText(/🏆/)).toHaveLength(1);
+    expect(screen.getAllByText('Destacado')).toHaveLength(1);
   });
 
-  it('indica la complejidad de instalación', () => {
+  it('distingue el precio total y el alcance de instalación', () => {
     renderCard();
-    expect(screen.getByText('Moderada')).toBeInTheDocument();
+    expect(screen.getByText(/Precio total · Instalación incluida/)).toBeInTheDocument();
   });
 });

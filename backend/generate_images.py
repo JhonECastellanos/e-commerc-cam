@@ -21,7 +21,7 @@ def make_hero(brand, color, accent):
       <stop offset="100%" style="stop-color:''' + color + ''';stop-opacity:0.8" />
     </linearGradient>
   </defs>
-  <rect width="600" height="400" rx="12" fill="url(#bg-''' + brand + '''")/>
+  <rect width="600" height="400" rx="12" fill="url(#bg-''' + brand + ''')"/>
   <circle cx="480" cy="120" r="100" fill="''' + accent + '''" opacity="0.15"/>
   <circle cx="120" cy="320" r="80" fill="''' + accent + '''" opacity="0.1"/>
   <g transform="translate(300,160)" fill="none" stroke="white" stroke-width="2.5">
