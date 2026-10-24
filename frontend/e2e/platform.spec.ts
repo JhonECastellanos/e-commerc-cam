@@ -138,7 +138,7 @@ test('all catalog image URLs respond and decoded images render', async ({
 
 
 test('model banners preserve the full frame on phone and portrait tablet', async ({page}) => {
-  for (const viewport of [{width:390,height:844},{width:768,height:1024}]) {
+  for (const viewport of [{width:390,height:844},{width:768,height:1024},{width:1024,height:1366}]) {
     await page.setViewportSize(viewport);
     await page.goto('/');
     for (const [index, slide] of [2,3].entries()) {
