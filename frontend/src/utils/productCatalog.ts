@@ -17,5 +17,6 @@ export function commercialProducts(products: Product[]): CatalogProduct[] {
         string
       ] => typeof entry[1] === 'string')), gallery: [...new Set([actual, ...(source?.gallery || [])].filter((url): url is string => Boolean(url)))] };
   });
-  return result.sort((a, b) => Number(Boolean(b.gallery.length)) - Number(Boolean(a.gallery.length)) || a.name.localeCompare(b.name, 'es'));
+  // Prioritize actual photographs while retaining the API's administrative order.
+  return result.sort((a, b) => Number(Boolean(b.gallery.length)) - Number(Boolean(a.gallery.length)));
 }
