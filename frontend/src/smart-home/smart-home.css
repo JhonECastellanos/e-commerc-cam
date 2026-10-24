@@ -601,3 +601,33 @@
     min-height: 240px;
   }
 }
+/* Shared blue presentation; the scene engine and device actions are unchanged. */
+.smart-blue{--lab-border:#cbd5e1;--lab-accent:#1e40af;background:#f8fafc;color:#172554}
+.smart-blue .lab-header,.smart-blue .lab-panel,.smart-blue .lab-tabs{background:#fff;color:#172554}
+.smart-blue .lab-world{background:#e8eef8}
+.smart-blue .lab-header{border-color:#cbd5e1}
+.smart-blue .lab-brand,.smart-blue .showcase-eyebrow,.smart-blue .lab-tabs button[aria-selected=true]{color:#1e40af}
+.smart-blue .lab-brand span,.smart-blue .muted,.smart-blue .home-scenes span,.smart-blue .strategic-points small,.smart-blue .point-card p,.smart-blue .server-story p{color:#475569}
+.smart-blue .lab-toolbar,.smart-blue .room-strip{background:#eff6ff;border-color:#cbd5e1;color:#172554}
+.smart-blue button,.smart-blue .lab-toolbar button,.smart-blue .room-strip button,.smart-blue .home-scenes button,.smart-blue .home-switches button{min-height:44px;min-width:44px;padding:8px 10px;font-size:12px;background:#fff;color:#1e3a8a;border-color:#cbd5e1;cursor:pointer}
+.smart-blue button:hover{background:#dbeafe}
+.smart-blue .lab-primary,.smart-blue .lab-toolbar button[aria-pressed=true]{background:#1e40af;border-color:#1e40af;color:#fff}
+.smart-blue .lab-primary:hover{background:#172554}
+.smart-blue .lab-tabs button[aria-selected=true]{border-color:#1e40af;background:#eff6ff}
+.smart-blue .home-scenes button{min-height:64px;font-size:12px}
+.smart-blue .home-switches button[aria-pressed=true]{background:#dbeafe;border-color:#1e40af}
+.smart-blue .home-switches b,.smart-blue .home-switches button[aria-pressed=true] b,.smart-blue .home-dashboard b,.smart-blue .point-card h3,.smart-blue summary{color:#1e3a8a}
+.smart-blue .home-dashboard,.smart-blue .point-card,.smart-blue .strategic-points{background:#f1f5f9;border-color:#cbd5e1;color:#475569}
+.smart-blue .lab-status{background:#eff6ff;color:#1e3a8a;border-top:1px solid #cbd5e1}
+.smart-blue .world-caption span{background:#172554e8;color:#fff}
+.smart-blue .lab-field input,.smart-blue .chat-history>div{background:#f8fafc;color:#172554;border-color:#cbd5e1}
+.smart-blue :is(button,a,input,summary):focus-visible{outline:3px solid #d97706;outline-offset:3px}
+.smart-blue .lab-toolbar>div,.smart-blue .home-switches,.smart-blue .project-actions{gap:8px}
+.smart-blue .panel-content h2{font-size:1rem;line-height:1.4}
+.smart-lab-embedded{min-height:0;border:1px solid #cbd5e1;border-radius:16px;overflow:hidden}
+.smart-lab-embedded .lab-header{padding:12px 16px}.smart-lab-embedded .lab-header h3{font-size:1.1rem;font-weight:700}
+.smart-lab-embedded .lab-body{height:690px;min-height:0;grid-template-columns:minmax(0,1fr) 310px}
+.smart-lab-embedded .panel-content{padding:16px}.smart-lab-embedded .lab-tabs{position:static}
+.smart-lab-embedded:fullscreen .lab-body{height:calc(100dvh - 88px)}
+@media(max-width:900px){.smart-lab-embedded .lab-body{height:auto;display:flex;flex-direction:column}.smart-lab-embedded .lab-world{height:530px;min-height:530px}.smart-lab-embedded .lab-panel{height:auto;max-height:none;overflow:visible}.smart-lab-embedded .panel-content{overflow:visible}.smart-blue .lab-toolbar button{font-size:11px}.smart-blue .walk-pad button{font-size:10px}.smart-blue .home-scenes{gap:8px}.smart-lab-embedded .world-caption{bottom:80px}.smart-lab-embedded .room-strip{max-height:110px;overflow:auto}.smart-lab-embedded .lab-header-actions{gap:8px}}
+.smart-blue .chat-history strong,.smart-blue .server-story>span{color:#1e40af}.smart-blue .server-story>span{border-color:#93c5fd;background:#eff6ff}

@@ -89,13 +89,83 @@ test('administrative banners rotate and retain manual navigation',async({page})=
     {id:2,title:'Instalación para tu negocio',image_url:'/images/cctv-diagram.svg'},
   ]}));
   await page.goto('/');
-  await expect(page.locator('.hero-slide')).toHaveCount(2);
+  await expect(page.locator('.hero-slide')).toHaveCount(6);
   await page.clock.runFor(14000);
   await expect(page.getByRole('button',{name:'Ver diapositiva 2'})).toHaveAttribute('aria-current','true');
   await expect(page.getByRole('heading',{name:'Instalación para tu negocio'})).toBeVisible();
   await page.getByRole('button',{name:'Diapositiva anterior'}).click();
   await page.clock.runFor(1500);
   await expect(page.getByRole('button',{name:'Ver diapositiva 1'})).toHaveAttribute('aria-current','true');
-  await expect(page.getByRole('button',{name:'Reproducir vídeo y carrusel'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Pausar vídeo y carrusel'})).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('background model clips play, pause and survive horizontal swipe',async({page},info)=>{
+  await page.goto('/');
+  await expect(page.locator('.hero-slide')).toHaveCount(5);
+  const hero=page.locator('.hero-viewport');
+  const box=(await hero.boundingBox())!;
+  const y=Math.max(120,box.y+50),start=box.x+box.width-35,end=box.x+35;
+  if(info.project.name==='mobile'){
+    const session=await page.context().newCDPSession(page);
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:start,y}]});
+    for(let step=1;step<=8;step++){
+      await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start+(end-start)*step/8,y}]});
+      await page.waitForTimeout(30);
+    }
+    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await session.detach();
+  }else{
+    await page.mouse.move(start,y);await page.mouse.down();
+    await page.mouse.move(end,y,{steps:12});await page.mouse.up();
+  }
+  await expect(page.getByRole('button',{name:'Ver diapositiva 2',exact:true})).toHaveAttribute('aria-current','true');
+  const video=page.locator('.hero-slide').nth(1).locator('video');
+  await expect(video).toBeVisible();
+  await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.duration)).toBe(5);
+  await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeGreaterThan(.1);
+  await page.getByRole('button',{name:'Pausar vídeo y carrusel'}).click();
+  await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.paused)).toBe(true);
+  const time=await video.evaluate((v:HTMLVideoElement)=>v.currentTime);
+  await page.waitForTimeout(350);
+  expect(await video.evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeCloseTo(time,1);
+  await page.getByRole('button',{name:'Reproducir vídeo y carrusel'}).click();
+  await expect.poll(()=>video.evaluate((v:HTMLVideoElement)=>v.paused)).toBe(false);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('installation tree filters actual products and qualifies optional capabilities',async({page})=>{
+  await page.goto('/');
+  const cable=page.locator('.installation-card').filter({has:page.getByRole('heading',{name:'Cableado',exact:true})});
+  await cable.getByText('Ver funciones y equipos',{exact:true}).click();
+  await cable.getByRole('link',{name:/Giro y zoom motorizados/}).click();
+  await expect(page).toHaveURL(/equipmentMode=cableado&function=ptz#productos/);
+  const products=page.locator('#productos');
+  await expect(products.getByRole('status')).toContainText('10 equipos');
+  await expect(products.getByRole('listitem').first()).toContainText('PTZ');
+  await products.getByLabel('Función del equipo').selectOption('');
+  await products.getByLabel('Conexión del equipo').selectOption('inalambrico');
+  await expect(products.getByRole('status')).toContainText('0 equipos');
+  await products.getByLabel('Conexión del equipo').selectOption('solar');
+  await products.getByLabel('Función del equipo').selectOption('two-way');
+  await expect(products.getByRole('status')).toContainText('2 equipos');
+  await expect(products.getByRole('listitem').first()).toContainText('solo en la variante SX');
+  await products.getByRole('button',{name:'Ver detalle',exact:true}).first().click();
+  await expect(page.getByRole('dialog')).toContainText('solo variante SX');
+});
+
+test('direct demo links stay visible after delayed catalogue loading',async({page})=>{
+  await page.route('**/api/products',async route=>{
+    const response=await route.fetch();
+    await page.waitForTimeout(900);
+    await route.fulfill({response});
+  });
+  await page.goto('/?demo=casa#casa-inteligente');
+  await expect(page.locator('#productos').getByRole('status')).toHaveText(/\d+ equipos/);
+  const panel=page.locator('#smart-demo-panel');
+  await expect(panel.locator('canvas')).toBeVisible();
+  await expect.poll(async()=>{
+    const box=await panel.boundingBox();return box?box.y:-1;
+  }).toBeGreaterThanOrEqual(60);
+  expect((await panel.boundingBox())!.y).toBeLessThan(150);
 });

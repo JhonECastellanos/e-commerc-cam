@@ -9,17 +9,30 @@ async function rendered(page: Page) {
   expect(frame.length).toBeGreaterThan(12000);
 }
 
-test('carousel contains both real interactive scenarios',async({page},info)=>{
+test('hero opens both demos inline and the same button collapses the panel',async({page})=>{
+  test.setTimeout(90000);
   await page.goto('/');
-  await page.getByRole('button',{name:'Ver casa 3D en carrusel'}).click();
-  await expect(page.locator('.lab-preview canvas')).toBeVisible();
-  await page.getByRole('button',{name:'Ver apartamento 3D en carrusel'}).click();
-  await expect(page.locator('.lab-preview canvas')).toBeVisible();
-  await page.getByRole('button',{name:'Ver casa 3D en carrusel'}).click();
-  if(info.project.name==='desktop')await page.locator('.lab-preview canvas').dblclick();
-  else await page.locator('.demo-card').getByRole('link',{name:'Ver demo casa',exact:true}).click();
-  await expect(page).toHaveURL(/simulador\/casa/);
-  await expect(page.getByRole('heading',{name:'Casa inteligente',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Ver diapositiva 2',exact:true}).click();
+  await page.getByRole('link',{name:'Ver casa 3D en carrusel',exact:true}).click();
+  await expect(page).toHaveURL(/\?demo=casa#casa-inteligente/);
+  const panel=page.locator('#smart-demo-panel'),service=page.locator('#casa-inteligente');
+  await expect(panel.locator('canvas')).toBeVisible();
+  await expect(panel.getByRole('button',{name:'Planta baja',exact:true})).toBeVisible();
+  const light=panel.getByRole('button',{name:'Luz de cocina',exact:false});
+  await light.click();await expect(light).toHaveAttribute('aria-pressed','true');
+  await service.getByRole('button',{name:'Ver demo apartamento',exact:true}).click();
+  await expect(panel.getByRole('heading',{name:'Apartamento inteligente',exact:true})).toBeVisible();
+  await expect(panel.locator('canvas')).toBeVisible();
+  await panel.getByRole('tab',{name:'Asistente',exact:true}).click();
+  await panel.getByLabel('Orden para mi hogar').fill('Enciende el televisor de la sala');
+  await panel.getByRole('button',{name:'Enviar orden'}).click();
+  await panel.getByRole('tab',{name:'Tu hogar',exact:true}).click();
+  await expect(panel.getByRole('button',{name:'TV de la sala',exact:false})).toHaveAttribute('aria-pressed','true');
+  await service.getByRole('button',{name:'Ver demo apartamento',exact:true}).click();
+  await expect(panel).toBeHidden();await expect(page.locator('canvas')).toHaveCount(0);
+  await expect(page).not.toHaveURL(/demo=/);
+  expect(new URL(page.url()).pathname).toBe('/');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 for(const scenario of ['casa','apartamento'])test(`${scenario}: architectural presentation, lights, TV, touch panel and restoration`,async({page},info)=>{
   test.setTimeout(90000);
