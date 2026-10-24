@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import WhatsappCTA from '../../components/public/WhatsappCTA';
+import '../../commerce.css';
 export default function FAQ() {
   const { t } = useTranslation();
   const faqs = [1, 2, 3, 4].map((n) => ({
@@ -13,7 +15,7 @@ export default function FAQ() {
     },
     {
       q: '¿El laboratorio 3D controla dispositivos reales?',
-      a: 'Las pruebas modifican únicamente dispositivos virtuales. Puedes compartir el diseño como referencia para tu asesoría; la instalación física necesita revisión de compatibilidad y puesta en marcha.',
+      a: 'Las pruebas modifican únicamente dispositivos virtuales. Puedes compartir la configuración de la demo como referencia para tu asesoría; la instalación física necesita revisión de compatibilidad y puesta en marcha.',
     },
     {
       q: '¿Cómo se cobra la instalación de servidores y el soporte?',
@@ -34,6 +36,7 @@ export default function FAQ() {
       <Link to="/asesoria" className="btn-primary inline-block mt-8">
         Solicitar asesoría personalizada
       </Link>
+      <div className="mt-4"><WhatsappCTA message="Hola, tengo una consulta sobre cámaras e instalación."/></div>
     </main>
   );
 }

@@ -1,278 +1,47 @@
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useReducedMotion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
-import CatalogImage from './CatalogImage';
-import { type Scenario } from '../../smart-home/domain';
-import { showcaseConfiguration } from '../../smart-home/showcase';
-import '../../smart-home/smart-home.css';
-const SceneViewport = lazy(() => import('../../smart-home/SceneViewport'));
-function embedURL(url?: string) {
-  const match = url?.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-  );
-  return match
-    ? `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=1&loop=1&playlist=${match[1]}&controls=0&rel=0`
-    : null;
+import CatalogImage, { imagePath } from './CatalogImage';
+import CommercialIcon from './CommercialIcon';
+import WhatsappCTA from './WhatsappCTA';
+import YouTubeMedia from './YouTubeMedia';
+type Banner={id:number|string;title?:string;subtitle?:string;video_url?:string;image_url?:string;link_url?:string};
+// Original security footage from the V1 repository. Administrator banners override it.
+export const originalSecurityVideo='https://www.youtube.com/watch?v=CJ3dAAna7jQ';
+export function youtubeId(value?:string) {
+  try {const url=new URL(value||'');if(url.hostname==='youtu.be')return /^[\w-]{11}$/.test(url.pathname.slice(1))?url.pathname.slice(1):undefined;if(!['youtube.com','www.youtube.com','www.youtube-nocookie.com'].includes(url.hostname))return;const id=url.searchParams.get('v')||url.pathname.split('/').pop();return id&&/^[\w-]{11}$/.test(id)?id:undefined;}catch{return;}
 }
-function PropertyPreview({
-  scenario,
-  active,
-}: {
-  scenario: Scenario;
-  active: boolean;
-}) {
-  const config = useMemo(() => showcaseConfiguration(scenario), [scenario]);
-  return (
-    <div className="lab-preview">
-      {active ? (
-        <Suspense
-          fallback={
-            <div className="scene-loading">Preparando escenario 3D…</div>
-          }
-        >
-          <SceneViewport config={config} preview />
-        </Suspense>
-      ) : (
-        <div className="scene-loading">
-          {scenario === 'casa' ? 'Casa inteligente' : 'Apartamento inteligente'}{' '}
-          · Escenario 3D
-        </div>
-      )}
-    </div>
-  );
+function safeMedia(value?:string) {if(!value)return;try{const url=new URL(value,location.origin);return ['https:','http:'].includes(url.protocol)?url.href:undefined;}catch{return;}}
+function HeroMedia({banner,active,playing}:{banner:Banner;active:boolean;playing:boolean}) {
+  const video=useRef<HTMLVideoElement>(null),[failed,setFailed]=useState(false);
+  const source=safeMedia(banner.video_url),id=youtubeId(source);
+  const poster=imagePath(banner.image_url)||'/images/cctv-diagram.svg';
+  const [allowed,setAllowed]=useState(playing);
+  useEffect(()=>{if(playing)setAllowed(true);if(video.current){if(playing&&active)void video.current.play().catch(()=>{});else video.current.pause();}},[playing,active]);
+  useEffect(()=>setFailed(false),[source]);
+  return <div className="hero-media"><CatalogImage src={poster} alt="Referencia de un sistema de cámaras y grabación" loading="eager" className="hero-poster"/>
+    {active&&!failed&&source&&(id?allowed&&<YouTubeMedia id={id} playing={playing} onError={()=>setFailed(true)}/>:allowed&&<video ref={video} src={source} poster={poster} autoPlay={playing} muted loop playsInline controls preload="metadata" aria-label="Vídeo de referencia de seguridad" onError={()=>setFailed(true)}/>)}
+    {failed&&source&&<a className="hero-video-fallback" href={source} target="_blank" rel="noopener noreferrer">Ver vídeo original</a>}
+    <span className="hero-media-caption">Videovigilancia · vídeo de referencia</span>
+  </div>;
 }
-export default function HeroCarousel({ settings }: { settings: any }) {
-  const { t } = useTranslation(),
-    navigate = useNavigate();
-  const [banners, setBanners] = useState<any[]>([]),
-    [selected, setSelected] = useState(0),
-    [paused, setPaused] = useState(false);
-  const [emblaRef, embla] = useEmblaCarousel({ loop: true, align: 'start' }, [
-    Autoplay({
-      delay: 14000,
-      stopOnInteraction: true,
-      stopOnMouseEnter: true,
-      stopOnFocusIn: true,
-    }),
-  ]);
-  useEffect(() => {
-    api
-      .getBanners()
-      .then(setBanners)
-      .catch(() => {});
-  }, []);
-  const onSelect = useCallback(() => {
-    if (embla) setSelected(embla.selectedScrollSnap());
-  }, [embla]);
-  useEffect(() => {
-    if (!embla) return;
-    onSelect();
-    embla.on('select', onSelect);
-    embla.on('reInit', onSelect);
-    return () => {
-      embla.off('select', onSelect);
-      embla.off('reInit', onSelect);
-    };
-  }, [embla, onSelect]);
-  const media = banners.length
-    ? banners
-    : [
-        {
-          id: 'intro',
-          title: t('home.hero_title'),
-          subtitle:
-            'Combos CCTV y soluciones de seguridad y domótica según tu inmueble.',
-        },
-      ];
-  const slides = [
-    ...media,
-    { id: 'casa', scenario: 'casa', title: 'Imagina tu casa conectada' },
-    {
-      id: 'apartamento',
-      scenario: 'apartamento',
-      title: 'Diseña tu apartamento inteligente',
-    },
-  ];
-  const togglePause = () => {
-    const plugin = embla?.plugins().autoplay;
-    if (paused) plugin?.play();
-    else plugin?.stop();
-    setPaused(!paused);
-  };
-  return (
-    <section
-      className="relative text-white overflow-hidden"
-      aria-label="Soluciones y simuladores interactivos"
-    >
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          {slides.map((slide, i) => (
-            <div
-              key={slide.id}
-              className="relative flex-[0_0_100%] min-w-0 bg-gradient-to-br from-primary-600 to-primary-900"
-            >
-              {slide.scenario ? (
-                <div
-                  className="hero-property grid md:grid-cols-2 min-h-[580px] md:min-h-[540px]"
-                  onDoubleClick={() => navigate(`/simulador/${slide.scenario}`)}
-                >
-                  <div className="flex flex-col justify-center px-6 md:px-12 py-10">
-                    <span className="text-emerald-200 text-xs font-bold tracking-widest uppercase mb-4">
-                      Laboratorio interactivo ·{' '}
-                      {slide.scenario === 'casa' ? 'Casa' : 'Apartamento'}
-                    </span>
-                    <h2 className="text-3xl lg:text-5xl font-bold leading-tight">
-                      {slide.title}
-                    </h2>
-                    <p className="text-primary-100 mt-5 mb-7 max-w-md">
-                      Recorre el hogar y descubre sus puntos inteligentes.
-                      Enciende la iluminación y la TV, conoce el servidor local
-                      y solicita una solución adaptada a tu vivienda.
-                    </p>
-                    <Link
-                      className="bg-white text-primary-700 font-bold px-6 py-3 rounded-lg w-fit"
-                      to={`/simulador/${slide.scenario}`}
-                    >
-                      Configurar{' '}
-                      {slide.scenario === 'casa' ? 'mi casa' : 'mi apartamento'}{' '}
-                      en 3D →
-                    </Link>
-                    <span className="text-xs text-primary-100 mt-4">
-                      Doble clic en el escenario o toca el botón para abrir el
-                      laboratorio.
-                    </span>
-                  </div>
-                  <PropertyPreview
-                    scenario={slide.scenario as Scenario}
-                    active={selected === i}
-                  />
-                </div>
-              ) : (
-                <div className="relative min-h-[540px] flex items-center py-14">
-                  {embedURL(slide.video_url) ? (
-                    <iframe
-                      src={embedURL(slide.video_url)!}
-                      className="absolute inset-0 w-full h-full pointer-events-none"
-                      title={slide.title || 'Video de instalación'}
-                      allow="autoplay; encrypted-media"
-                    />
-                  ) : slide.video_url &&
-                    /^https?:\/\//.test(slide.video_url) ? (
-                    <video
-                      className="absolute inset-0 w-full h-full object-cover"
-                      src={slide.video_url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                    />
-                  ) : slide.image_url ? (
-                    <CatalogImage
-                      src={slide.image_url}
-                      alt={slide.title}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loading={i ? 'lazy' : 'eager'}
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-900/70 to-transparent" />
-                  <div className="relative max-w-7xl mx-auto px-6 md:px-12 w-full">
-                    <div className="max-w-3xl">
-                      <span className="text-primary-200 uppercase tracking-widest text-xs font-semibold">
-                        Seguridad · Videovigilancia · Domótica
-                      </span>
-                      <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight my-5">
-                        {slide.title || t('home.hero_title')}
-                      </h1>
-                      <p className="text-xl text-primary-100 mb-8">
-                        {slide.subtitle || t('home.hero_subtitle')}
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <Link
-                          to="/asesoria"
-                          className="bg-white text-primary-700 font-bold py-4 px-6 rounded-lg text-center"
-                        >
-                          Solicitar asesoría personalizada
-                        </Link>
-                        <Link
-                          to={
-                            slide.link_url?.startsWith('/') &&
-                            !slide.link_url.startsWith('//')
-                              ? slide.link_url
-                              : '/catalogo'
-                          }
-                          className="border border-white/50 text-white font-semibold py-4 px-6 rounded-lg text-center"
-                        >
-                          Explorar soluciones
-                        </Link>
-                      </div>
-                      {settings.installed_count > 0 && (
-                        <p className="text-sm mt-7 text-primary-100">
-                          {settings.installed_count} instalaciones registradas
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="bg-primary-900 flex items-center justify-center gap-3 p-3 flex-wrap">
-        <button
-          aria-label="Diapositiva anterior"
-          onClick={() => embla?.scrollPrev()}
-          className="px-3 py-1"
-        >
-          ←
-        </button>
-        {slides.map((slide, i) => (
-          <button
-            key={slide.id}
-            onClick={() => {
-              embla?.plugins().autoplay?.stop();
-              setPaused(true);
-              embla?.scrollTo(i);
-            }}
-            aria-label={
-              slide.scenario
-                ? `Ver ${slide.scenario} 3D en carrusel`
-                : `Ver diapositiva ${i + 1}`
-            }
-            aria-current={selected === i ? 'true' : undefined}
-            className={`text-xs px-3 py-2 rounded-full ${selected === i ? 'bg-white text-primary-800' : 'bg-white/10 text-white'}`}
-          >
-            {slide.scenario === 'casa'
-              ? 'Casa 3D'
-              : slide.scenario === 'apartamento'
-                ? 'Apartamento 3D'
-                : `Solución ${i + 1}`}
-          </button>
-        ))}
-        <button
-          aria-label="Diapositiva siguiente"
-          onClick={() => embla?.scrollNext()}
-          className="px-3 py-1"
-        >
-          →
-        </button>
-        <button
-          onClick={togglePause}
-          className="text-xs px-3 py-2 border border-white/30 rounded-full"
-        >
-          {paused ? 'Reanudar' : 'Pausar'}
-        </button>
-      </div>
-    </section>
-  );
+export default function HeroCarousel({settings}:{settings:{installed_count?:number|string}}) {
+  const [banners,setBanners]=useState<Banner[]>([]),[selected,setSelected]=useState(0),[paused,setPaused]=useState(false),[visible,setVisible]=useState(true),[hover,setHover]=useState(false);
+  const reduced=useReducedMotion(),host=useRef<HTMLElement>(null),[explicitPlay,setExplicitPlay]=useState(false);
+  const [emblaRef,embla]=useEmblaCarousel({loop:true},[Autoplay({delay:12000,playOnInit:false,stopOnInteraction:true,stopOnFocusIn:false})]);
+  useEffect(()=>{let alive=true;api.getBanners().then(data=>{if(alive)setBanners(data)}).catch(()=>{});return()=>{alive=false}},[]);
+  useEffect(()=>{if(!embla)return;const select=()=>setSelected(embla.selectedScrollSnap());embla.on('select',select);embla.on('reInit',select);select();return()=>{embla.off('select',select);embla.off('reInit',select)}},[embla]);
+  useEffect(()=>{const element=host.current;if(!element)return;let inView=true;const update=()=>setVisible(inView&&!document.hidden);const observer=new IntersectionObserver(([entry])=>{inView=entry.isIntersecting;update()});observer.observe(element);document.addEventListener('visibilitychange',update);return()=>{observer.disconnect();document.removeEventListener('visibilitychange',update)}},[]);
+  const stopped=paused||(Boolean(reduced)&&!explicitPlay);
+  const playing=!stopped&&visible&&!hover;
+  useEffect(()=>{if(!embla)return;const sync=()=>{const plugin=embla.plugins().autoplay;if(playing&&!reduced&&embla.scrollSnapList().length>1)plugin?.play();else plugin?.stop();};sync();embla.on('reInit',sync);return()=>{embla.off('reInit',sync)}},[embla,playing,reduced,banners.length]);
+  const slides:Banner[]=banners.length?banners:[{id:'security',title:'Cámaras de seguridad, con instalación a tu medida.',subtitle:'Compara combos CCTV con precio total o cuéntanos qué necesitas proteger. Te ayudamos a elegir cámaras, grabación e instalación según tu inmueble.',video_url:import.meta.env.VITE_SECURITY_VIDEO_URL||originalSecurityVideo}];
+  function manual(index:number){setPaused(true);embla?.scrollTo(index)}
+  useEffect(()=>{host.current?.querySelectorAll<HTMLElement>('.hero-slide').forEach((slide,index)=>{slide.inert=index!==selected;});},[selected,banners.length]);
+  return <section ref={host} className="security-hero" aria-label="Soluciones de cámaras e instalación" onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)} onFocusCapture={e=>{if(!(e.target as HTMLElement).closest('[data-motion-control]'))setPaused(true)}}><div ref={emblaRef} className="overflow-hidden"><div className="flex">{slides.map((banner,i)=><article key={banner.id} className="hero-slide"><div className="commerce-container hero-layout"><div className="hero-copy"><p className="commerce-eyebrow">InstalaCámara · seguridad electrónica</p><h1>{banner.title||'Cámaras y combos CCTV con instalación'}</h1><p>{banner.subtitle||'Protege accesos y áreas de tu inmueble con una solución que puedas comparar y entender.'}</p><div className="commerce-actions"><WhatsappCTA message="Hola, quiero cotizar cámaras de seguridad con instalación."/><Link to={safeMedia(banner.link_url)||'/catalogo'} className="commerce-button commerce-button-light">Ver combos y precios <CommercialIcon name="arrow" className="h-5 w-5"/></Link></div><div className="hero-commitments"><span><CommercialIcon name="camera"/>Cámaras y grabación</span><span><CommercialIcon name="shield"/>Instalación según cobertura</span><span><CommercialIcon name="check"/>Asesoría para elegir</span></div>{Number(settings.installed_count)>0&&<p className="text-sm">{settings.installed_count} instalaciones registradas</p>}</div><HeroMedia banner={banner} active={selected===i} playing={playing&&selected===i}/></div></article>)}</div></div>
+    <div className="commerce-container hero-controls"><div className="flex gap-2">{slides.length>1&&<button aria-label="Diapositiva anterior" onClick={()=>manual((selected-1+slides.length)%slides.length)}><CommercialIcon name="arrow" className="h-5 w-5 rotate-180"/></button>}{slides.map((slide,i)=><button key={slide.id} aria-label={`Ver diapositiva ${i+1}`} aria-current={selected===i?'true':undefined} onClick={()=>manual(i)}>Solución {i+1}</button>)}{slides.length>1&&<button aria-label="Diapositiva siguiente" onClick={()=>manual((selected+1)%slides.length)}><CommercialIcon name="arrow" className="h-5 w-5"/></button>}</div><button data-motion-control aria-label={stopped?'Reproducir vídeo y carrusel':'Pausar vídeo y carrusel'} aria-pressed={stopped} onClick={()=>{if(stopped){setPaused(false);setExplicitPlay(true);setHover(false);}else setPaused(true);}}><CommercialIcon name={stopped?'play':'pause'} className="h-4 w-4"/>{stopped?'Reproducir':'Pausar'}</button></div>
+  </section>;
 }
