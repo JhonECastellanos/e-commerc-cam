@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import CatalogImage, { imagePath } from '../../components/public/CatalogImage';
-import { comboPhotos } from '../../utils/catalogPhotos';
+import { comboPhotos, comboTitle } from '../../utils/catalogPhotos';
 import WhatsappCTA from '../../components/public/WhatsappCTA';
 import '../../commerce.css';
 
@@ -176,7 +176,7 @@ export default function ComboDetail() {
 
           <h1 className="text-3xl font-bold text-gray-900 mb-1">{combo.brand_name}</h1>
           <p className="text-lg text-gray-500 mb-2">
-            {combo.cameras_count} {t('catalog.cameras')} - {combo.resolution}
+            {comboTitle(combo)}
           </p>
           <p className="text-primary-600 font-medium mb-4">{modeLabels[combo.mode]}</p>
 

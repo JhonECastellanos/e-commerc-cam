@@ -20,6 +20,11 @@ export type CameraFunction = typeof cameraFunctions[number]['id'];
 export const verifiedIPBases = ['IPC-B120HAA','IPC-B140HAA','IPC-T240HAA','IPC-B620HAA','IPC-B420HAA','IPC-B520HAA','IPC-B440HAA','IPC-B540HAA','IPC-B640HAA','IPC-D140HAA','IPC-T220HAA'];
 export function equipmentClassification(p: CatalogProduct): {modes:InstallationBranch[];functions:CameraFunction[];note?:string} {
   const specs=p.specs||{}, transmission=String(specs['Tecnologia Transmision']||'');
+  if(specs['Clasificacion manual']==='si') {
+    const modes=String(specs['Modalidades del catalogo']||'').split(',').filter((m):m is InstallationBranch=>installationBranches.some(b=>b.id===m));
+    const functions=String(specs['Funciones del catalogo']||'').split(',').filter((f):f is CameraFunction=>cameraFunctions.some(item=>item.id===f));
+    return {modes:[...new Set(modes)],functions:[...new Set(functions)],note:'Clasificación del administrador. Confirmar funciones y compatibilidad en la ficha del modelo exacto.'};
+  }
   const model=p.model||'', text=`${p.name} ${p.category} ${specs['Formato Fisico']||''}`;
   const recorder=/DVR|grabador|codificador/i.test(text), ptz=/PTZ/i.test(text);
   const ip=transmission==='IP', knownIP=verifiedIPBases.some(base=>model.startsWith(base));
@@ -41,10 +46,11 @@ export function equipmentClassification(p: CatalogProduct): {modes:InstallationB
   return {modes,functions,note:optionalSX?'Audio bidireccional y luces Live Guard solo en la variante SX. Confirmar sufijo; no se promete sirena.':ip?'Funciones según variante exacta. Las fichas LU/LUF verificadas no confirman altavoz ni sirena integrados.':wired?'En sistemas híbridos se confirma grabador, resolución y compatibilidad.':undefined};
 }
 export function classifiedSpecs(p:CatalogProduct) {
-  if(p.specs?.['Tecnologia Transmision']!=='IP')return p.specs||{};
+  const visible=Object.fromEntries(Object.entries(p.specs||{}).filter(([key])=>!['Clasificacion manual','Modalidades del catalogo','Funciones del catalogo'].includes(key)));
+  if(p.specs?.['Tecnologia Transmision']!=='IP')return visible;
   const classification=equipmentClassification(p), verified=classification.functions.includes('poe');
   const optionalSX=classification.functions.includes('two-way');
-  return {...p.specs,
+  return {...visible,
     'Audio Mic':optionalSX?'Micrófono; audio bidireccional solo variante SX':'Micrófono según variante; audio bidireccional por confirmar',
     'Disuasion Activa':optionalSX?'Luces Live Guard solo variante SX; sirena por confirmar':'Sirena / Live Guard: verificar variante exacta',
     'Almacenamiento Interno':'SD según variante; verificar sufijo y ficha',

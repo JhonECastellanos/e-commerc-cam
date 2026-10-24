@@ -31,7 +31,7 @@ function HeroMedia({banner,active,playing}:{banner:Banner;active:boolean;playing
     {active&&!failed&&source&&(id?allowed&&<YouTubeMedia id={id} playing={playing} onError={()=>setFailed(true)}/>:allowed&&<video ref={video} src={source} poster={poster} autoPlay={playing} muted loop playsInline preload="metadata" tabIndex={-1} onError={()=>setFailed(true)}/>)}
   </div>;
 }
-export default function HeroCarousel({settings}:{settings:{installed_count?:number|string}}) {
+export default function HeroCarousel({settings}:{settings:{installed_count?:number|string;hero_demo_slides?:string}}) {
   const [banners,setBanners]=useState<Banner[]>([]),[selected,setSelected]=useState(0),[paused,setPaused]=useState(false),[visible,setVisible]=useState(true),[hover,setHover]=useState(false),[interacted,setInteracted]=useState(false);
   const reduced=useReducedMotion(),host=useRef<HTMLElement>(null),[explicitPlay,setExplicitPlay]=useState(false);
   const [emblaRef,embla]=useEmblaCarousel({loop:true},[Autoplay({delay:12000,playOnInit:false,stopOnInteraction:true,stopOnFocusIn:false})]);
@@ -39,7 +39,7 @@ export default function HeroCarousel({settings}:{settings:{installed_count?:numb
   useEffect(()=>{if(!embla)return;const select=()=>setSelected(embla.selectedScrollSnap());embla.on('select',select);embla.on('reInit',select);select();return()=>{embla.off('select',select);embla.off('reInit',select)}},[embla]);
   useEffect(()=>{const element=host.current;if(!element)return;let inView=true;const update=()=>setVisible(inView&&!document.hidden);const observer=new IntersectionObserver(([entry])=>{inView=entry.isIntersecting;update()});observer.observe(element);document.addEventListener('visibilitychange',update);return()=>{observer.disconnect();document.removeEventListener('visibilitychange',update)}},[]);
   const stopped=paused||(Boolean(reduced)&&!explicitPlay),playing=!stopped&&visible;
-  const slides:Banner[]=[...(banners.length?banners:[{id:'security',label:'CCTV',title:'Cámaras de seguridad, con instalación a tu medida.',subtitle:'Compara combos CCTV con precio total o cuéntanos qué necesitas proteger. Te ayudamos a elegir cámaras, grabación e instalación según tu inmueble.',image_url:'/banner-assets/security-ai.webp',video_url:import.meta.env.VITE_SECURITY_VIDEO_URL||originalSecurityVideo}]),...demonstrations];
+  const slides:Banner[]=[...(banners.length?banners:[{id:'security',label:'CCTV',title:'Cámaras de seguridad, con instalación a tu medida.',subtitle:'Compara combos CCTV con precio total o cuéntanos qué necesitas proteger. Te ayudamos a elegir cámaras, grabación e instalación según tu inmueble.',image_url:'/banner-assets/security-ai.webp',video_url:import.meta.env.VITE_SECURITY_VIDEO_URL||originalSecurityVideo}]),...demonstrations.filter(demo=>String(settings.hero_demo_slides ?? 'house,apartment,functions,recording').split(',').includes(String(demo.id)))];
   useEffect(()=>{if(!embla)return;const sync=()=>{const plugin=embla.plugins().autoplay;if(playing&&!hover&&!interacted&&!reduced&&embla.scrollSnapList().length>1)plugin?.play();else plugin?.stop();};sync();embla.on('reInit',sync);return()=>{embla.off('reInit',sync)}},[embla,playing,hover,interacted,reduced,banners.length]);
   function manual(index:number){setInteracted(true);embla?.scrollTo(index)}
   useEffect(()=>{host.current?.querySelectorAll<HTMLElement>('.hero-slide').forEach((slide,index)=>{slide.inert=index!==selected;});},[selected,banners.length]);

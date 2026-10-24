@@ -1,18 +1,18 @@
 import { Link } from 'react-router-dom';
 import CatalogImage from './CatalogImage';
-import { comboPhotos } from '../../utils/catalogPhotos';
+import { comboPhotos, comboTitle } from '../../utils/catalogPhotos';
 import { installationLabel, modeLabels, money, type Combo } from '../../utils/commercial';
 import WhatsappCTA from './WhatsappCTA';
 export default function ComboCard({ combo }: {
   combo: Combo;
 }) {
   const photos = comboPhotos(combo);
-  return <article className="combo-commerce-card">
+  return <article className="combo-commerce-card" role="listitem">
 <Link className="combo-commerce-photo" to={`/catalogo/${combo.id}`} aria-label={`Ver detalle de ${combo.brand_name}, ${combo.cameras_count} cámaras`}>
 <CatalogImage src={photos[0] || combo.image_url || undefined} alt={`${combo.brand_name} · ${combo.cameras_count} cámaras`} title={photos.length ? 'Fotografía de kit de referencia. Componentes sujetos a confirmación.' : undefined} className="w-full h-full object-contain"/>{combo.is_budget && <span className="combo-badge">Opción económica</span>}{combo.is_bestseller && !combo.is_budget && <span className="combo-badge">Destacado</span>}</Link>
 <div className="combo-commerce-body">
 <p className="commerce-eyebrow">{combo.brand_name}</p>
-<h3>{combo.cameras_count} cámaras · {combo.resolution}</h3>
+<h3>{comboTitle(combo)}</h3>
 <p>{modeLabels[combo.mode] || combo.mode}</p>
 <p className="combo-price">{money(combo.final_price)}</p>
 <p className="commerce-muted">Precio total · {installationLabel(combo)}</p>

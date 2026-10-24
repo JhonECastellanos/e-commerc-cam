@@ -46,7 +46,7 @@ test('office questions are conditional; original catalogue photos, filters and d
   await page.goto('/catalogo');
   const products=page.locator('#productos');
   await expect(products.getByRole('status')).toContainText('44 equipos');
-  await products.getByRole('combobox',{name:'Marca',exact:true}).selectOption('HiLook');
+  await products.getByRole('combobox',{name:'Marca',exact:true}).selectOption('Hikvision / HiLook');
   await expect(products.getByRole('listitem').first().getByRole('img')).toBeVisible();
   await products.locator('img').first().scrollIntoViewIfNeeded();
   await expect.poll(()=>products.locator('img').first().evaluate((img:HTMLImageElement)=>img.complete&&img.naturalWidth>0)).toBe(true);
