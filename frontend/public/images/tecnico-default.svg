@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" rx="16" fill="#F3F4F6"/>
+  <circle cx="200" cy="110" r="45" fill="#D1D5DB"/>
+  <circle cx="200" cy="110" r="35" fill="#9CA3AF"/>
+  <rect x="155" y="160" width="90" height="70" rx="10" fill="#D1D5DB"/>
+  <rect x="145" y="220" width="30" height="50" rx="6" fill="#9CA3AF"/>
+  <rect x="225" y="220" width="30" height="50" rx="6" fill="#9CA3AF"/>
+  <rect x="110" y="175" width="30" height="12" rx="4" fill="#9CA3AF" transform="rotate(-30 125 181)"/>
+  <rect x="260" y="175" width="30" height="12" rx="4" fill="#9CA3AF" transform="rotate(30 275 181)"/>
+  <circle cx="185" cy="105" r="4" fill="#F9FAFB"/>
+  <circle cx="215" cy="105" r="4" fill="#F9FAFB"/>
+  <path d="M193 118 Q200 125 207 118" stroke="#F9FAFB" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+  <rect x="30" y="250" width="340" height="2" rx="1" fill="#E5E7EB"/>
+  <text x="200" y="285" textAnchor="middle" fill="#6B7280" fontSize="14" fontFamily="system-ui">Técnico profesional</text>
+</svg>
