@@ -12,6 +12,7 @@ RUN npm run build
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx-public.conf /etc/nginx/conf.d/public.conf
 # Run nginx as a non-root user. The default pid path /run/nginx.pid is not writable by
 # appuser (/var/run is a symlink to /run, which chown -R does not follow), so point the pid
 # and listen port to locations this user can write/bind.
